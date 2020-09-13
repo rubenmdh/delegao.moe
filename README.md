@@ -12,6 +12,7 @@ Built with PHP and the Bootstrap 4 library, it is a clean and minimalistic perso
 - Admin panel
 
 ## To-do list
+- Migrate from TinyMCE to Markdown
 - Tags
 - Categories
 - Guestbook entries management
