@@ -10,18 +10,18 @@ Built with PHP and the Bootstrap 4 library, it is a clean and minimalistic perso
 - Drafts
 - Guestbook
 - Admin panel
+   - Create/modify posts
+   - Manage guestbook entries
 
 ## To-do list
-- Migrate from TinyMCE to Markdown
 - Tags
 - Categories
-- Guestbook entries management
 - User management interface
 - A more feature rich administrator management interface
 
 ## Installation
-1. Download the source code on your webroot
-2. Unzip it
+1. Download the latest release
+2. Unzip it on your webroot
 3. Create a MySQL/MariaDB database
 4. Go to https://yourwebsite.com/install.php with your web browser and follow the steps
 5. Set up your webserver rewrite rules (more information below)
@@ -40,4 +40,4 @@ delegao.moe is solely mantained by me, released under the GPLv3 license
 
 delegao.moe contains external software:
   - [Bootstrap 4](https://github.com/twbs/bootstrap)
-  - [TinyMCE](https://github.com/tinymce/tinymce/)
+  - [Parsedown](https://github.com/erusev/parsedown)
