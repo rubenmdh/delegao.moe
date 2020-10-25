@@ -2,6 +2,10 @@
 // Include config file
 require_once "config.php";
 
+// Load Parsedown
+include ('functions/Parsedown.php');
+$Parsedown = new Parsedown();
+
 if (isset($_GET["id"])) {
   $sql = 'SELECT * FROM news WHERE status = 1 AND id = ?';
 
@@ -71,7 +75,7 @@ mysqli_close($link);
               <?php if (isset($_GET["id"])) { echo '<a href="index" class="btn btn-primary btn-sm mb-3">< Go back</a>'; }?>
               <h4 class="card-title"><?php echo $newsData['title'];?></h4>
               <h6 class="card-subtitle mb-4 text-muted"><i class="fas fa-user"></i> <?php echo $newsData['posted_by'];?>&nbsp;&nbsp;&nbsp;<i class="fas fa-calendar-alt"></i> <?php echo $newsData['created_at'];?> <?php if(isset($newsData['last_update'])) { echo "<i>(updated on ". $newsData['last_update'] .")</i>";}?></h6>
-              <p class="card-text"><?php echo $newsData['body'];?></p>
+              <p class="card-text"><?php echo $Parsedown->text($newsData['body']);?></p>
               <hr>
               <a href="news" class="card-link">Older posts</a>
             </div>

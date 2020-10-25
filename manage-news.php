@@ -6,9 +6,9 @@ session_start();
 // Include config file
 require_once "config.php";
 
-// Check if the user is logged in, if not then redirect him to login page
+// Check if the user is logged in, if not then redirect them to login page
 if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
-    header("location: wp-login.php");
+    header("location: login.php");
     exit;
 }
 
@@ -30,7 +30,6 @@ $sql = 'SELECT * FROM news ORDER BY id DESC';
                 echo'<td>' . $row["last_update"] . '</td>';
             }
             echo '<td><a href="modify-post.php?id=' . $row["id"] . '" class="btn btn-secondary" role="button">Modify</a>&nbsp;<a href="functions/delete-post-db.php?id=' . $row["id"] . '" class="btn btn-danger" role="button" onclick="return checkDelete()"><i class="fas fa-trash"></i></a>';
-            //echo '<td><a href="#" data-toggle="modal" data-target="#ModifyAnnouncement" data-id="' . $row["id"] . '" class="btn btn-primary" role="button">Modify</a>&nbsp;<a href="manage_node.php?id=' . $row["id"] . '" class="btn btn-danger" role="button"><i class="fas fa-trash"></i></a></td>';
           echo'</tr>';
         }
         mysqli_free_result($result);
@@ -75,31 +74,7 @@ $sql = 'SELECT * FROM news ORDER BY id DESC';
     <div id="background"></div>
     <div id="background-cover"></div>
 
-    <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-dark card mt-2 mb-5">
-            <a class="navbar-brand" href="#">delegao.moe area 51</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarText" style="text-align:left;">
-                <ul class="navbar-nav mr-auto">
-                  <li class="nav-item">
-                      <a class="nav-link" href="dashboard.php">Home</a>
-                  </li>
-                  <li class="nav-item active">
-                      <a class="nav-link" href="#">News <span class="sr-only">(current)</span></a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link" href="#">Guestbook</a>
-                  </li>
-                </ul>    
-                <span class="navbar-text" style="float:right;">
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Logged in as <?php echo htmlspecialchars($_SESSION["username"]); ?> - <a href="logout.php">Logout</a>
-                </span>
-            </div>
-        </nav>
-    </div>
+    <?php include_once('header.php'); ?>
 
     <div class="container card shadow text-white">
       <h1 class="h3 mt-2">News management<a class="btn btn-primary" type="button" style="float: right;" href="new-post.php">New post</a></h1>
