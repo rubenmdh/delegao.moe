@@ -2,10 +2,15 @@
 // Include config file
 require_once "config.php";
 
+// Load Parsedown
+include ('functions/Parsedown.php');
+$Parsedown = new Parsedown();
+
 $sql = 'SELECT * FROM news WHERE status = 1 ORDER BY ID DESC';
 
 if($result = mysqli_query($link, $sql)){
   function newsData($result){
+    global $Parsedown;
     if(mysqli_num_rows($result) > 0){
       
       while($row = mysqli_fetch_array($result)){
@@ -15,7 +20,7 @@ if($result = mysqli_query($link, $sql)){
               echo '<h6 class="card-subtitle mb-4 text-muted"><i class="fas fa-user"></i> '. $row["posted_by"] .'&nbsp;&nbsp;&nbsp;<i class="fas fa-calendar-alt"></i> '. $row["created_at"]; 
               if(isset($row["last_update"])) { echo ' <i>(updated on '. $row["last_update"] .')</i>';}
               echo '</h6>';
-              echo '<p class="card-text">'. mb_strimwidth($row["body"], 0, 250, "..." ).'</p>';
+              echo '<p class="card-text">'. mb_strimwidth($Parsedown->text($row["body"]), 0, 250, "..." ).'</p>';
               echo '<a class="btn btn-outline-primary btn-sm" href="index.php?id='. $row["id"] .'" role="button">Read more</a>';
               echo '</div>';
           echo '</div>';
