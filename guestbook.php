@@ -38,6 +38,12 @@ $sql = 'SELECT * FROM guestbook ORDER BY id DESC';
       case "4":
         $error_message = "You forgot to add your country. If this was intentional, please write Anonymous Country.";
         break;
+      case "5":
+        $error_message = "Please enter an answer. It can be found on the <a href='about-me.php'>About me</a> page.";
+        break;
+      case "6":
+        $error_message = "I don't feel like having that today. Check your answer. CaSe SeNsItIvE";
+        break;
       default:
       $error_message = "Are you sure there is an error? You might want to double check what you are trying to do...";
         break;
@@ -158,7 +164,13 @@ $sql = 'SELECT * FROM guestbook ORDER BY id DESC';
           <p>
             <label for="inputCountry">Country:</label>
             <input type="country" class="form-control" name="country" id="inputCountry">
-			<input type="text" name="password" style="display:none !important" tabindex="-1" autocomplete="off">
+            <input type="text" name="password" style="display:none !important" tabindex="-1" autocomplete="off">
+          </p>
+          <p>
+            <label for="inputDish">Dish of the day:</label>
+            <input type="text" class="form-control" placeholder='It can be found on the "About me" page.' name="dishoftheday" id="inputDish">
+              <br>
+            <input type="checkbox" id="inputCheckbox" value="Bird"> <label for="inputCheckbox">Are you a bird?</label>
           </p>
          
       </div>

@@ -33,6 +33,16 @@ if(empty(htmlspecialchars($_POST["country"]))){
     $param_country = htmlspecialchars($_POST["country"]);
 }
 
+// Check if the provided captcha answer is correct
+if(empty(htmlspecialchars($_POST["dishoftheday"]))){
+    header("Location: ../guestbook.php?error=5");
+    die();
+} else{
+    if($_POST["dishoftheday"] != $captcha_dish) {
+        header("Location: ../guestbook.php?error=6");
+        die();  
+    }
+}
 
 
 $sql = 'INSERT INTO guestbook (name, email, comment, country) VALUES (?, ?, ?, ?)';
