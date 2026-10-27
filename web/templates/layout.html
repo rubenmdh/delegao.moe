@@ -3,11 +3,12 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{.Title}}{{if ne .Title "Delegao.moe"}} - Delegao.moe{{end}}</title>
 <link rel="stylesheet" href="/css/bootstrap.min.css"><link rel="stylesheet" href="/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><script src="/js/site.js" defer></script>
 {{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="/css/admin.css"><script src="/js/admin.js" defer></script>{{end}}</head>
-<body class="{{if or .Admin (eq .Page "login")}}admin-shell{{end}}"><div id="background"></div><div id="background-cover"></div>
+<body><div id="background"></div><div id="background-cover"></div>
 {{if .Admin}}
+<a class="sr-only sr-only-focusable" href="#main-content">Skip to content</a>
 {{template "admin-nav" .}}
-<main id="main-content" class="container admin-main text-white"><div class="admin-workspace">{{template "content" .}}</div><footer class="admin-footer"><span>delegao.moe / area 51</span><a href="/" target="_blank" rel="noopener noreferrer">Open website <span aria-hidden="true">↗</span></a></footer></main>
-{{else if eq .Page "login"}}<main class="container admin-login">{{template "content" .}}</main>
+<main id="main-content" class="container card shadow text-white mb-5"><div class="card-body">{{template "content" .}}</div></main>
+{{else if eq .Page "login"}}<main class="container card text-white mt-5 mb-5 admin-login"><div class="card-body">{{template "content" .}}</div></main>
 {{else}}
 <main class="container text-white site-content">
 {{if .Wide}}
@@ -18,7 +19,7 @@
 
 {{define "content"}}
 {{if .Error}}<div class="alert alert-danger" role="alert">{{.Error}}</div>{{end}}
-{{if .Notice}}<div class="admin-notice" role="status"><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{.Notice}}</span></div>{{end}}
+{{if .Notice}}<div class="alert alert-dark" role="status">{{.Notice}}</div>{{end}}
 {{if eq .Page "posts"}}{{template "posts" .}}
 {{else if eq .Page "guestbook"}}{{template "guestbook" .}}
 {{else if eq .Page "login"}}{{template "login" .}}
@@ -35,13 +36,17 @@
 {{if not .Wide}}</div></div>{{end}}{{end}}
 {{end}}
 
-{{define "pagination"}}{{if or .Previous .Next}}<nav aria-label="Pagination" class="admin-pagination mt-4">
+{{define "pagination"}}{{if or .Previous .Next}}<nav aria-label="Pagination" class="mt-4">
 {{if .Previous}}<a class="btn btn-secondary" href="{{if .PreviousURL}}{{.PreviousURL}}{{else}}?page={{.Previous}}{{end}}">&lt; Previous</a>{{end}}
-<span>Page {{.PageNumber}}</span>
+<span class="mx-2">Page {{.PageNumber}}</span>
 {{if .Next}}<a class="btn btn-primary" href="{{if .NextURL}}{{.NextURL}}{{else}}?page={{.Next}}{{end}}">Next &gt;</a>{{end}}</nav>{{end}}{{end}}
 
-{{define "admin-nav"}}<a class="admin-skip" href="#main-content">Skip to content</a><header class="admin-header"><nav class="container admin-navigation" aria-label="Administration">
-<a class="admin-brand" href="{{route "admin"}}"><span class="admin-brand-mark" aria-hidden="true">d.</span><span>delegao<span class="admin-brand-light">.moe</span><small>AREA 51</small></span></a>
-<div class="admin-nav-links"><a href="{{route "admin"}}" {{if eq .Page "dashboard"}}aria-current="page"{{end}}><i class="fas fa-th-large" aria-hidden="true"></i> Overview</a><a href="{{route "admin.posts"}}" {{if or (eq .Page "posts") (eq .Page "editor")}}aria-current="page"{{end}}><i class="fas fa-pen" aria-hidden="true"></i> Posts</a><a href="{{route "admin.guests"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}><i class="fas fa-address-book" aria-hidden="true"></i> Guestbook</a></div>
-<div class="admin-account"><span class="admin-user"><i class="fas fa-user-circle" aria-hidden="true"></i> {{.User}}</span><form action="{{route "logout"}}" method="post"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="admin-logout" title="Sign out"><i class="fas fa-sign-out-alt" aria-hidden="true"></i><span> Sign out</span></button></form></div>
-</nav></header>{{end}}
+{{define "admin-nav"}}<div class="container"><nav class="navbar navbar-dark card admin-nav mt-2 mb-5" aria-label="Administration">
+<a class="navbar-brand" href="{{route "admin"}}">delegao.moe area 51</a>
+<ul class="navbar-nav flex-row flex-wrap mr-auto">
+<li class="nav-item {{if eq .Page "dashboard"}}active{{end}}"><a class="nav-link px-2" href="{{route "admin"}}" {{if eq .Page "dashboard"}}aria-current="page"{{end}}>Home</a></li>
+<li class="nav-item {{if or (eq .Page "posts") (eq .Page "editor")}}active{{end}}"><a class="nav-link px-2" href="{{route "admin.posts"}}" {{if or (eq .Page "posts") (eq .Page "editor")}}aria-current="page"{{end}}>News</a></li>
+<li class="nav-item {{if eq .Page "guestbook"}}active{{end}}"><a class="nav-link px-2" href="{{route "admin.guests"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}>Guestbook</a></li>
+</ul>
+<div class="navbar-text ml-lg-auto">Logged in as {{.User}} &ndash; <form class="d-inline" action="{{route "logout"}}" method="post"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="btn btn-link btn-sm p-0 text-white">Logout</button></form> &ndash; <a href="/">Visit website</a></div>
+</nav></div>{{end}}

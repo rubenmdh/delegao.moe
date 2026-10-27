@@ -2,7 +2,8 @@
 
 Personal website, microblog and guestbook in Go, with MySQL editing and static
 publication. The original public dark theme, animated background, avatar and
-content are preserved. The administration area has its own responsive layout.
+content are preserved. Administration uses the same background, translucent
+cards, typography and Bootstrap controls as the public website.
 GPLv3; see [LICENSE](LICENSE).
 
 For **delegao.moe on an Orange Pi Zero with 512 MB RAM**, follow the Spanish
