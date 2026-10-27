@@ -1,0 +1,56 @@
+/* A one-off accent layer; dormant without the time-gated root class. */
+html.season-halloween body.public-site {
+  --public-line: rgba(218, 156, 99, .22);
+  background-color: #1a151b;
+}
+html.season-halloween .public-site::before {
+  background: linear-gradient(90deg, rgba(24,17,27,.94), rgba(24,18,28,.88) 48%, rgba(28,18,29,.73)),
+    linear-gradient(0deg, #1a151b, transparent 75%), url('../img/bg/img1.gif') center/cover;
+}
+html.season-halloween .public-site::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 136px;
+  height: 136px;
+  background: url('../img/halloween-web.svg') top right/contain no-repeat;
+  opacity: .28;
+  pointer-events: none;
+}
+html.season-halloween .public-site .public-avatar { position: relative; flex: none; }
+html.season-halloween .public-site .public-identity img {
+  outline: 1px solid #ad754b;
+  outline-offset: 3px;
+}
+html.season-halloween .public-site .public-avatar::after {
+  content: "";
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  right: -5px;
+  bottom: -3px;
+  background: url('../img/halloween-pumpkin.svg') center/contain no-repeat;
+  pointer-events: none;
+}
+html.season-halloween .public-site .public-name .domain { color: #c7acb7; }
+html.season-halloween .public-site .public-navigation a[aria-current="page"] {
+  color: #e3ba8b;
+  text-decoration-color: #cc8b55;
+}
+html.season-halloween .public-site .post-date { color: #b29b96; }
+html.season-halloween .public-site .read-post,
+html.season-halloween .public-site .archive-link,
+html.season-halloween .public-site .back-link { color: #dfb78f; }
+html.season-halloween .public-site a:focus-visible,
+html.season-halloween .public-site button:focus-visible { outline-color: #d5aa7d; }
+@media (max-width: 760px) {
+  html.season-halloween .public-site::before {
+    background: linear-gradient(90deg,rgba(24,17,27,.94),rgba(24,18,28,.88)),
+      linear-gradient(0deg,#1a151b,transparent 75%),url('../img/bg/img1.gif') center/cover;
+  }
+  html.season-halloween .public-site::after { width: 78px; height: 78px; opacity: .2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.season-halloween .public-site::before { background: linear-gradient(90deg,#18111b,#211822); }
+}

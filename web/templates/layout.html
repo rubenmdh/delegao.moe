@@ -2,7 +2,7 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{.Title}}{{if ne .Title "Delegao.moe"}} - Delegao.moe{{end}}</title>
 <link rel="stylesheet" href="{{asset "css/bootstrap.min.css"}}"><link rel="stylesheet" href="{{asset "css/all.min.css"}}"><link rel="stylesheet" href="{{asset "css/custom.css"}}"><script src="{{asset "js/site.js"}}" defer></script>
-{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="{{asset "css/admin.css"}}"><script src="{{asset "js/admin.js"}}" defer></script>{{else}}<link rel="stylesheet" href="{{asset "css/public.css"}}">{{end}}</head>
+{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="{{asset "css/admin.css"}}"><script src="{{asset "js/admin.js"}}" defer></script>{{else}}<link rel="stylesheet" href="{{asset "css/public.css"}}"><link rel="stylesheet" href="{{asset "css/halloween.css"}}"><script src="{{asset "js/seasonal.js"}}"></script>{{end}}</head>
 <body class="{{if or .Admin (eq .Page "login")}}admin-site{{else}}public-site{{end}}"><div id="background"></div><div id="background-cover"></div>
 <a class="sr-only sr-only-focusable" href="#main-content">Skip to content</a>
 {{if .Admin}}

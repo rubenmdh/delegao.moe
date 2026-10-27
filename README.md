@@ -157,6 +157,13 @@ table and admin-only data. Administration and login retain the classic theme.
 CSS and script URLs include content hashes so an update takes effect without
 waiting for the previous browser cache to expire.
 
+The optional 2026 Halloween accent layer runs from 28 October until
+1 November at 23:59:00 in Europe/Madrid (22:59:00 UTC). `seasonal.js` toggles
+the root class on page load and at the deadline, including already-open pages
+and BFCache restores. Static HTML does not need regenerating at expiry. This
+is a fixed 2026 window; it does not reactivate annually. With JavaScript
+disabled the regular design remains visible. Admin and login are unaffected.
+
 ## Configuration and security
 
 `ADDR` defaults to `127.0.0.1:8080`. The Orange Pi deployment example uses
