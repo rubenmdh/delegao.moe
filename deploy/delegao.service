@@ -1,7 +1,6 @@
 [Unit]
 Description=delegao.moe hybrid publisher and dynamic backend
-After=network.target mariadb.service
-Wants=mariadb.service
+After=network.target
 StartLimitIntervalSec=60
 StartLimitBurst=5
 

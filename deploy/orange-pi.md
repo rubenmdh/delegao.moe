@@ -1,6 +1,8 @@
-# Despliegue en Orange Pi Zero de 512 MB: delegao.moe
+# Alternativa MySQL/MariaDB para Orange Pi Zero de 512 MB
 
-La configuración recomendada es **nginx + un proceso Go + MariaDB local**,
+Para la migración actual desde MySQL externo a SQLite usa primero
+[sqlite-migration.md](sqlite-migration.md). Esta guía es la alternativa para
+quien conserva **nginx + un proceso Go + MariaDB local**,
 con systemd. No necesita PHP, Node.js, Hugo ni Docker en la placa. Compila en
 otro ordenador y copia únicamente el ejecutable y los archivos de `deploy/`.
 
@@ -89,6 +91,14 @@ sudo install -o root -g delegao -m 0640 \
 sudoedit /etc/delegao.env
 ```
 
+El ejemplo de entorno incluido selecciona SQLite. Para esta alternativa cambia
+estas líneas en `/etc/delegao.env`:
+
+```sh
+DATABASE_DRIVER=mysql
+DATABASE_DSN='delegao:REPLACE_WITH_DB_PASSWORD@unix(/run/mysqld/mysqld.sock)/delegao'
+```
+
 Sustituye `REPLACE_WITH_DB_PASSWORD`. Utiliza una contraseña aleatoria que no
 contenga apóstrofos ni saltos de línea para mantener válidas las comillas del
 ejemplo. El DSN usa `/run/mysqld/mysqld.sock`; comprueba la ruta con
@@ -162,10 +172,13 @@ temporalmente durante la parada y la migración, y revócalos de nuevo.
 ```sh
 sudo install -o root -g root -m 0644 ~/deploy-delegao/delegao.service \
   /etc/systemd/system/delegao.service
+sudo install -d -m 0755 /etc/systemd/system/delegao.service.d
+printf '[Unit]\nAfter=mariadb.service\nRequires=mariadb.service\n' |
+  sudo tee /etc/systemd/system/delegao.service.d/mysql.conf >/dev/null
 sudo systemctl daemon-reload
 sudo systemctl enable --now delegao
 sudo systemctl --no-pager --full status delegao
-curl -I http://127.0.0.1:8080/
+curl -I http://127.0.0.1:18080/
 ```
 
 Go escucha únicamente en loopback. El directorio de estado es escribible para

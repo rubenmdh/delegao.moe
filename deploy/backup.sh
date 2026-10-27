@@ -1,4 +1,5 @@
 #!/bin/bash
+# MySQL/MariaDB only. For SQLite use backup-sqlite.sh.
 # Run as root on the board; MariaDB's local unix_socket root login is used.
 set -euo pipefail
 umask 077
