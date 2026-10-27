@@ -23,6 +23,19 @@ html.season-halloween .public-site .public-identity img {
   outline: 1px solid #ad754b;
   outline-offset: 3px;
 }
+html.season-halloween .public-site .public-avatar::before {
+  content: "";
+  position: absolute;
+  width: 64px;
+  height: 46px;
+  left: -5px;
+  top: -23px;
+  background: url('../img/halloween-hat.svg') center/contain no-repeat;
+  transform: rotate(-9deg);
+  transform-origin: 50% 90%;
+  pointer-events: none;
+  z-index: 1;
+}
 html.season-halloween .public-site .public-avatar::after {
   content: "";
   position: absolute;
