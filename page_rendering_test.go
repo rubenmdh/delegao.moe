@@ -1,6 +1,7 @@
 package main
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -38,16 +39,27 @@ func TestRenderingFooterScope(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := strings.Contains(string(body), "HTML generated in "); got != tc.want {
+		if got := strings.Contains(string(body), `class="generation-note"`); got != tc.want {
 			t.Errorf("page %s admin=%v: rendering footer = %v, want %v", tc.view.Page, tc.view.Admin, got, tc.want)
+		}
+		if tc.want && !strings.Contains(string(body), runtime.Version()+" in ") {
+			t.Fatal("guestbook does not show the actual Go runtime version")
 		}
 	}
 }
 
-func TestRenderingElapsed(t *testing.T) {
-	p := &PageRendering{started: time.Now().Add(-2 * time.Millisecond)}
-	duration, err := time.ParseDuration(p.Elapsed())
-	if err != nil || duration < 2*time.Millisecond {
-		t.Fatalf("invalid elapsed duration: %v, %v", duration, err)
+func TestFormatRenderDuration(t *testing.T) {
+	for _, tc := range []struct {
+		elapsed time.Duration
+		want    string
+	}{
+		{0, "1.00µs"},
+		{856 * time.Microsecond, "856.00µs"},
+		{17607 * time.Microsecond, "17.61ms"},
+		{1234 * time.Millisecond, "1.23s"},
+	} {
+		if got := formatRenderDuration(tc.elapsed); got != tc.want {
+			t.Errorf("formatRenderDuration(%v) = %q, want %q", tc.elapsed, got, tc.want)
+		}
 	}
 }

@@ -18,5 +18,5 @@
 
 {{define "public-footer"}}<footer class="public-footer">
 <div><a href="{{route "guestbook"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}><i class="far fa-address-book" aria-hidden="true"></i>guestbook</a><span class="utility-divider" aria-hidden="true">·</span><a href="/keys" {{if eq .Page "keys"}}aria-current="page"{{end}}><i class="fas fa-key" aria-hidden="true"></i>gpg</a><span class="utility-divider" aria-hidden="true">·</span><a href="/donate" {{if eq .Page "donate"}}aria-current="page"{{end}}><i class="far fa-heart" aria-hidden="true"></i>donate</a></div>
-{{with .Rendering}}<small class="generation-note"><span title="Time to render this page's HTML, excluding database queries and disk writes.">HTML generated in {{.Elapsed}}</span>{{if .Load}}<span aria-hidden="true"> · </span><span title="One-minute system load average when this HTML was generated; not CPU utilization.">load {{.Load}}</span>{{end}}</small>{{end}}
+{{with .Rendering}}<small class="generation-note"><a href="https://go.dev/blog/greenteagc" title="Time to render this page's HTML, excluding database queries and disk writes.">{{.GoVersion}} in {{.Elapsed}}</a>{{if .Load}}<span aria-hidden="true"> · </span><span title="One-minute system load average when this HTML was generated; not CPU utilization.">load {{.Load}}</span>{{end}}</small>{{end}}
 </footer>{{end}}

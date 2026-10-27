@@ -164,6 +164,9 @@ CPU utilization percentage; unavailable measurements are omitted. Both values
 are recorded on each guestbook render. Static pages, administration and login
 omit these metrics. This adds no polling, JavaScript or external requests.
 
+Rendering durations use two decimal places and adapt between µs, ms and s. The
+guestbook displays the actual Go runtime version linked to the Go GC article.
+
 The optional 2026 Halloween accent layer runs from 28 October until
 1 November at 23:59:00 in Europe/Madrid (22:59:00 UTC). `seasonal.js` toggles
 the root class on page load and at the deadline, including already-open pages

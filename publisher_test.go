@@ -62,7 +62,7 @@ func TestPublisherBuildServeAndRestore(t *testing.T) {
 		if strings.Contains(w.Body.String(), "Secret draft") || strings.Contains(w.Body.String(), `name="csrf"`) || strings.Contains(w.Body.String(), "<script>bad") {
 			t.Fatalf("private or unsafe content generated on %s", path)
 		}
-		if strings.Contains(w.Body.String(), "HTML generated in ") {
+		if strings.Contains(w.Body.String(), `class="generation-note"`) {
 			t.Fatalf("rendering metadata exposed on static page %s", path)
 		}
 	}
