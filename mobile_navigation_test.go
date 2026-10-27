@@ -9,34 +9,44 @@ import (
 	"time"
 )
 
-func TestGeneratedPagesHaveAccessibleMobileNavigation(t *testing.T) {
+func TestGeneratedPagesHaveAccessiblePublicNavigation(t *testing.T) {
 	posts := []Post{}
 	publisher := publisherFixture(t, &posts)
 	if err := publisher.Rebuild(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	for _, page := range []string{"about-me", "projects", "music", "games", "contact", "donate", "keys"} {
+	for _, page := range publicInformationPages {
 		t.Run(page, func(t *testing.T) {
 			response := readPublished(publisher, "GET", "/"+page, nil)
 			html := response.Body.String()
-			_, after, _ := strings.Cut(html, `<details class="mobile-site-menu" data-site-menu>`)
-			menu, _, found := strings.Cut(after, "</details>")
+			_, after, _ := strings.Cut(html, `<nav class="public-navigation" aria-label="Main navigation">`)
+			menu, _, found := strings.Cut(after, "</nav>")
 			if response.Code != 200 || !found || strings.Contains(menu, "<script") {
-				t.Fatal("generated page lacks native mobile navigation")
+				t.Fatal("generated page lacks direct public navigation")
 			}
-			for _, path := range []string{"about-me", "projects", "music", "games", "contact", "guestbook", "keys", "donate"} {
+			for _, path := range []string{"", "about-me", "projects", "services", "music", "games", "contact"} {
 				if strings.Count(menu, `href="/`+path+`"`) != 1 {
 					t.Fatalf("mobile menu must contain exactly one link to %s", path)
 				}
 			}
-			if strings.Count(menu, `aria-current="page"`) != 1 || !regexp.MustCompile(`<a\b[^>]*href="/`+page+`"[^>]*aria-current="page"`).MatchString(menu) {
-				t.Fatal("mobile navigation does not identify the current page")
+			activeArea := menu
+			if page == "keys" || page == "donate" {
+				_, after, _ = strings.Cut(html, `<footer class="public-footer">`)
+				activeArea, _, _ = strings.Cut(after, "</footer>")
+				if strings.Contains(menu, `aria-current="page"`) {
+					t.Fatal("unrelated primary page marked current")
+				}
+			}
+			if strings.Count(activeArea, `aria-current="page"`) != 1 || !regexp.MustCompile(`<a\b[^>]*href="/`+page+`"[^>]*aria-current="page"`).MatchString(activeArea) {
+				t.Fatal("navigation does not identify the current page")
 			}
 			if !strings.Contains(html, `href="#main-content"`) || !strings.Contains(html, `<main id="main-content"`) {
 				t.Fatal("skip link has no main-content target")
 			}
-			if blog, memo := strings.Index(html, `<section id="blog"`), strings.Index(html, `<aside id="memo"`); memo >= 0 && (blog < 0 || blog > memo) {
-				t.Fatal("page content must precede the profile on mobile and in keyboard order")
+			for _, removed := range []string{`data-site-menu`, `id="memo"`, "Climate activist. Archivist.", "Student."} {
+				if strings.Contains(html, removed) {
+					t.Fatalf("obsolete public profile or navigation remains: %s", removed)
+				}
 			}
 		})
 	}

@@ -13,11 +13,29 @@
 {{else}}<tr><td colspan="7">{{if or .Query (and .Filter (ne .Filter "all"))}}No matching posts.{{else}}No posts have been created yet.{{end}}</td></tr>{{end}}
 </tbody></table></div>
 {{template "pagination" .}}
+{{else if .Home}}
+{{range .Posts}}<article class="latest-entry">
+<time class="post-date" datetime="{{.Created.Format "2006-01-02T15:04:05Z07:00"}}">{{postDate .Created}}</time>
+<h1 class="post-title"><a href="{{.URL}}">{{.Title}}</a></h1>
+<p class="post-excerpt">{{excerpt .Body}}</p>
+<a class="read-post" href="{{.URL}}">Continue reading <span aria-hidden="true">→</span></a>
+</article>{{else}}<h1 class="page-title">Blog</h1><p>No posts yet.</p>{{end}}
+{{if .Earlier}}<section class="earlier-entries" aria-labelledby="earlier-title"><h2 id="earlier-title">Earlier</h2><ol>
+{{range .Earlier}}<li><time datetime="{{.Created.Format "2006-01-02"}}">{{shortDate .Created}}</time><a href="{{.URL}}">{{.Title}}</a></li>{{end}}
+</ol><a class="archive-link" href="{{route "posts.index"}}">All posts →</a></section>{{else if .Posts}}<a class="archive-link" href="{{route "posts.index"}}">All posts →</a>{{end}}
+<div class="services-line"><a class="services-heading" href="{{route "services"}}">Services</a>{{template "service-links" .}}</div>
+{{else if .Single}}
+{{range .Posts}}<article class="public-post"><a class="back-link" href="/">← Blog</a>
+<time class="post-date" datetime="{{.Created.Format "2006-01-02T15:04:05Z07:00"}}">{{postDate .Created}}</time>
+<h1 class="post-title">{{.Title}}</h1>
+<p class="post-meta">{{if .Author}}By {{.Author}}{{end}}{{if .Updated}} <span>· Updated {{postDate .Updated}}</span>{{end}}</p>
+<div class="post-body">{{markdown .Body}}</div>
+<a class="archive-link" href="{{route "posts.index"}}">All posts →</a></article>{{end}}
 {{else}}
-{{range .Posts}}<article class="card mb-5"><div class="card-body">
-{{if and $.Single (not $.Home)}}<a href="/" class="btn btn-primary btn-sm mb-3">&lt; Go back</a>{{end}}
-<h1 class="h4 card-title">{{.Title}}</h1><p class="card-subtitle mb-4 text-muted"><i class="fas fa-user" aria-hidden="true"></i> {{.Author}} &nbsp; <i class="fas fa-calendar-alt" aria-hidden="true"></i> {{date .Created}}{{if .Updated}} <i>(updated on {{date .Updated}})</i>{{end}}</p>
-{{if $.Single}}<div class="post-body">{{markdown .Body}}</div><hr><a href="{{route "posts.index"}}">Older posts</a>
-{{else}}<p class="card-text">{{excerpt .Body}}</p><a href="{{.URL}}" class="btn btn-outline-primary btn-sm">Read more</a>{{end}}</div></article>
-{{else}}<div class="card"><div class="card-body"><h1 class="h4">No posts have been created yet.</h1><p>Maybe it is the time to write your first post?</p></div></div>{{end}}
+<section class="post-list"><h1 class="page-title">Blog archive</h1>
+{{range .Posts}}<article class="post-list-item">
+<time class="post-date" datetime="{{.Created.Format "2006-01-02"}}">{{shortDate .Created}}</time>
+<h2 class="post-title"><a href="{{.URL}}">{{.Title}}</a></h2><p class="post-excerpt">{{excerpt .Body}}</p>
+<a class="read-post" href="{{.URL}}">Read more →</a>
+</article>{{else}}<p>No posts yet.</p>{{end}}</section>
 {{template "pagination" .}}{{end}}{{end}}

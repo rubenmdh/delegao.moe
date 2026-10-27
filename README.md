@@ -73,6 +73,11 @@ stay dynamic. Public reads use files rather than SQL or Markdown conversion.
 The original informational pages remain embedded templates rather than
 web-editable CMS entries; changing those templates requires recompilation.
 
+The homepage leads with the latest published entry and a plain-text Markdown
+excerpt, followed by up to three earlier entries and the blog archive. It uses
+the same snapshot as the generated articles; the generator retains only a
+bounded prefix for the lead and metadata for the three earlier links.
+
 Publishing, updating, unpublishing and deleting trigger a complete rebuild with
 a bounded worker pool. `BUILD_WORKERS` defaults to 2 and accepts 1–4. These are
 generation goroutines inside **one Go server process**, not multiple instances.
@@ -141,11 +146,14 @@ Drafts return 404 publicly. Destructive GET endpoints are unavailable.
 - `/admin/posts/create`, `/admin/posts/{id}/edit`: Markdown editor and preview.
 - `/admin/guestbook`: dynamic entry management; emails are admin-only.
 - `/guestbook`: public reading/signing; `/login` and POST `/logout` manage sessions.
+- `/services`: generated directory using the shared list in `public_services.go`.
 
-On mobile, public pages put content before the profile and share a compact
-navigation menu, including the wide pages. The menu works without JavaScript;
-JavaScript adds dismissal with Escape or a tap outside. Guestbook entries stack
-their fields on narrow screens, retaining the desktop table and admin-only data.
+Public pages follow the approved blog-first layout: a small identity, direct
+navigation in two groups, and a reading column. Navigation works without
+JavaScript, marks the current section, and keeps Blog active on article pages.
+Services, GPG keys, donations and the guestbook remain directly accessible.
+Guestbook entries stack their fields on narrow screens, retaining the desktop
+table and admin-only data. Administration and login retain the classic theme.
 CSS and script URLs include content hashes so an update takes effect without
 waiting for the previous browser cache to expire.
 

@@ -43,6 +43,7 @@ type View struct {
 	PreviousURL, NextURL                   string
 	Title, Page, CSRF, User, Error, Action string
 	Posts                                  []Post
+	Earlier                                []Post
 	Post                                   Post
 	Guests                                 []Guest
 	Guest                                  Guest
@@ -61,13 +62,12 @@ func newApp(store *Store, secure bool, answer string) (*App, error) {
 			return address, nil
 		}
 		return "", fmt.Errorf("unknown bundled asset: %s", path)
-	}, "route": route, "markdown": a.renderMarkdown, "date": func(t time.Time) string { return t.Format("2006-01-02 15:04") }, "excerpt": func(s string) string {
-		r := []rune(s)
-		if len(r) > 250 {
-			return string(r[:250]) + "…"
-		}
-		return s
-	}}
+	}, "route": route, "services": publicServices, "markdown": a.renderMarkdown,
+		"date":      func(t time.Time) string { return t.Format("2006-01-02 15:04") },
+		"postDate":  func(t time.Time) string { return t.Format("2 January 2006") },
+		"shortDate": func(t time.Time) string { return t.Format("2 Jan 2006") },
+		"excerpt":   func(s string) string { return postExcerpt(s, 400) },
+	}
 	t, err := template.New("site").Funcs(funcs).ParseFS(web, "web/templates/*.html", "web/templates/pages/*.html")
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (a *App) handler() http.Handler {
 	bind("GET", "home", a.home)
 	bind("GET", "posts.index", a.postList)
 	bind("GET", "posts.show", a.postShow)
-	for _, p := range []string{"about-me", "projects", "music", "games", "contact", "donate", "keys"} {
+	for _, p := range publicInformationPages {
 		mux.HandleFunc("GET /"+p, func(w http.ResponseWriter, r *http.Request) {
 			if a.publisher != nil {
 				a.publisher.ServeHTTP(w, r)
@@ -225,14 +225,15 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		a.redirectPost(w, r, r.URL.Query().Get("id"))
 		return
 	}
-	post, err := a.store.latestPost(r.Context())
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	posts, err := a.store.homePosts(r.Context())
+	if err != nil {
 		a.fail(w, err)
 		return
 	}
 	v := View{Page: "posts", Title: "Delegao.moe", Single: true, Home: true}
-	if err == nil {
-		v.Posts = []Post{post}
+	if len(posts) > 0 {
+		v.Posts = posts[:1]
+		v.Earlier = posts[1:]
 	}
 	a.render(w, r, 200, v)
 }

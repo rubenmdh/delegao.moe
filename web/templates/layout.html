@@ -2,21 +2,19 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{.Title}}{{if ne .Title "Delegao.moe"}} - Delegao.moe{{end}}</title>
 <link rel="stylesheet" href="{{asset "css/bootstrap.min.css"}}"><link rel="stylesheet" href="{{asset "css/all.min.css"}}"><link rel="stylesheet" href="{{asset "css/custom.css"}}"><script src="{{asset "js/site.js"}}" defer></script>
-{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="{{asset "css/admin.css"}}"><script src="{{asset "js/admin.js"}}" defer></script>{{end}}</head>
-<body><div id="background"></div><div id="background-cover"></div>
+{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="{{asset "css/admin.css"}}"><script src="{{asset "js/admin.js"}}" defer></script>{{else}}<link rel="stylesheet" href="{{asset "css/public.css"}}">{{end}}</head>
+<body class="{{if or .Admin (eq .Page "login")}}admin-site{{else}}public-site{{end}}"><div id="background"></div><div id="background-cover"></div>
 <a class="sr-only sr-only-focusable" href="#main-content">Skip to content</a>
 {{if .Admin}}
 {{template "admin-nav" .}}
 <main id="main-content" class="container card shadow text-white mb-5"><div class="card-body">{{template "content" .}}</div></main>
 {{else if eq .Page "login"}}<main id="main-content" class="container card text-white mt-5 mb-5 admin-login"><div class="card-body">{{template "content" .}}</div></main>
 {{else}}
-{{template "mobile-navigation" .}}
-<main id="main-content" class="container text-white site-content">
-{{if .Wide}}
- <div class="card"><div class="card-body">{{template "content" .}}</div></div>
- <div class="card mt-4 p-3"><a class="site-back-link" href="/">&lt; Go back</a><span class="h4 font-weight-light mt-2"><b>delegao</b>.moe</span></div>
-{{else}}<div class="row"><section id="blog" class="col-12 col-lg-8 mb-5">{{template "content" .}}</section><aside id="memo" class="col-12 col-lg-4 mb-5">{{template "sidebar" .}}</aside></div>{{end}}
-</main>{{end}}</body></html>{{end}}
+<div class="public-shell{{if .Wide}} public-wide{{end}}">
+{{template "public-header" .}}
+<main id="main-content" tabindex="-1">{{template "content" .}}</main>
+{{template "public-footer" .}}
+</div>{{end}}</body></html>{{end}}
 
 {{define "content"}}
 {{if .Error}}<div class="alert alert-danger" role="alert">{{.Error}}</div>{{end}}
@@ -26,21 +24,28 @@
 {{else if eq .Page "login"}}{{template "login" .}}
 {{else if eq .Page "editor"}}{{template "editor" .}}
 {{else if eq .Page "dashboard"}}{{template "dashboard" .}}
-{{else}}{{if not .Wide}}<div class="card"><div class="card-body">{{end}}
+{{else}}<section class="public-page">
 {{if eq .Page "about-me"}}{{template "page-about-me" .}}
 {{else if eq .Page "projects"}}{{template "page-projects" .}}
 {{else if eq .Page "music"}}{{template "page-music" .}}
 {{else if eq .Page "games"}}{{template "page-games" .}}
 {{else if eq .Page "contact"}}{{template "page-contact" .}}
+{{else if eq .Page "services"}}{{template "page-services" .}}
 {{else if eq .Page "donate"}}{{template "page-donate" .}}
 {{else if eq .Page "keys"}}{{template "page-keys" .}}{{end}}
-{{if not .Wide}}</div></div>{{end}}{{end}}
+</section>{{end}}
 {{end}}
 
-{{define "pagination"}}{{if or .Previous .Next}}<nav aria-label="Pagination" class="mt-4">
+{{define "pagination"}}{{if or .Previous .Next}}<nav aria-label="Pagination" class="{{if .Admin}}mt-4{{else}}public-pagination{{end}}">
+{{if .Admin}}
 {{if .Previous}}<a class="btn btn-secondary" href="{{if .PreviousURL}}{{.PreviousURL}}{{else}}?page={{.Previous}}{{end}}">&lt; Previous</a>{{end}}
 <span class="mx-2">Page {{.PageNumber}}</span>
-{{if .Next}}<a class="btn btn-primary" href="{{if .NextURL}}{{.NextURL}}{{else}}?page={{.Next}}{{end}}">Next &gt;</a>{{end}}</nav>{{end}}{{end}}
+{{if .Next}}<a class="btn btn-primary" href="{{if .NextURL}}{{.NextURL}}{{else}}?page={{.Next}}{{end}}">Next &gt;</a>{{end}}
+{{else}}
+{{if .Previous}}<a href="{{if .PreviousURL}}{{.PreviousURL}}{{else}}?page={{.Previous}}{{end}}">← Newer</a>{{end}}
+<span>Page {{.PageNumber}}</span>
+{{if .Next}}<a href="{{if .NextURL}}{{.NextURL}}{{else}}?page={{.Next}}{{end}}">Older →</a>{{end}}
+{{end}}</nav>{{end}}{{end}}
 
 {{define "admin-nav"}}<div class="container"><nav class="navbar navbar-dark card admin-nav mt-2 mb-5" aria-label="Administration">
 <a class="navbar-brand" href="{{route "admin"}}">delegao.moe area 51</a>

@@ -244,9 +244,29 @@ func (s *Store) posts(ctx context.Context, admin bool, page int) ([]Post, error)
 	}
 	return result, rows.Err()
 }
-func (s *Store) latestPost(ctx context.Context) (Post, error) {
-	return scanPost(s.db.QueryRowContext(ctx, "SELECT "+postColumns+" FROM news WHERE status=1 ORDER BY id DESC LIMIT 1"))
+
+// homePosts reads one statement-level snapshot of the latest four published
+// posts. Only the latest body crosses the database connection, bounded to the
+// same prefix used by the static publisher; earlier entries need metadata only.
+func (s *Store) homePosts(ctx context.Context) ([]Post, error) {
+	body := fmt.Sprintf("CASE WHEN id=(SELECT MAX(id) FROM news WHERE status=1) THEN SUBSTR(body,1,%d) ELSE '' END", homeExcerptRunes)
+	columns := strings.Replace(postColumns, "body", body, 1)
+	rows, err := s.db.QueryContext(ctx, "SELECT "+columns+" FROM news WHERE status=1 ORDER BY id DESC LIMIT 4")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var posts []Post
+	for rows.Next() {
+		p, err := scanPost(rows)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, rows.Err()
 }
+
 func (s *Store) post(ctx context.Context, id int64, admin bool) (Post, error) {
 	query := "SELECT " + postColumns + " FROM news WHERE id=?"
 	if !admin {

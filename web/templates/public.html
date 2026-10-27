@@ -1,0 +1,21 @@
+{{define "public-header"}}<header class="public-identity">
+<a href="/" class="public-avatar" aria-label="Blog"><img src="/img/delegao.jpg" alt="" width="52" height="52"></a>
+<div><a href="/" class="public-name"><b>delegao</b><span class="domain">.moe</span></a><p>Rubén M.</p></div>
+</header>
+<nav class="public-navigation" aria-label="Main navigation">
+<div class="nav-primary">
+<a href="/" {{if eq .Page "posts"}}aria-current="page"{{end}}>Blog</a>
+<a href="/about-me" {{if eq .Page "about-me"}}aria-current="page"{{end}}>About</a>
+<a href="/projects" {{if eq .Page "projects"}}aria-current="page"{{end}}>Projects</a>
+<a href="{{route "services"}}" {{if eq .Page "services"}}aria-current="page"{{end}}>Services</a>
+</div><div class="nav-personal">
+<a href="/music" {{if eq .Page "music"}}aria-current="page"{{end}}>Music</a>
+<a href="/games" {{if eq .Page "games"}}aria-current="page"{{end}}>Games</a>
+<a href="/contact" {{if eq .Page "contact"}}aria-current="page"{{end}}>Contact</a>
+</div></nav>{{end}}
+
+{{define "service-links"}}{{range services}}<a target="_blank" rel="noopener noreferrer" href="{{.URL}}">{{.Name}}</a>{{end}}{{end}}
+
+{{define "public-footer"}}<footer class="public-footer">
+<div><a href="{{route "guestbook"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}>guestbook</a><span aria-hidden="true">·</span><a href="/keys" {{if eq .Page "keys"}}aria-current="page"{{end}}>gpg</a><span aria-hidden="true">·</span><a href="/donate" {{if eq .Page "donate"}}aria-current="page"{{end}}>donate</a></div>
+</footer>{{end}}

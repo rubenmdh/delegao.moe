@@ -342,7 +342,7 @@ func testHTTPFlows(t *testing.T, store *Store) {
 	if code, body, _ := request("GET", p.URL(), nil); code != 200 || !strings.Contains(body, "<strong>Hello</strong>") || strings.Contains(body, "<script>alert") {
 		t.Fatalf("public post: %d %s", code, body)
 	}
-	if code, body, _ := request("GET", "/", nil); code != 200 || !strings.Contains(body, "<strong>Hello</strong>") || strings.Contains(body, "&lt; Go back") {
+	if code, body, _ := request("GET", "/", nil); code != 200 || !strings.Contains(body, `<p class="post-excerpt">Hello</p>`) || !strings.Contains(body, `href="`+p.URL()+`"`) || strings.Contains(body, "&lt; Go back") {
 		t.Fatalf("latest post/home: %d %s", code, body)
 	}
 	for _, path := range []string{fmt.Sprintf("/index.php?id=%d", p.ID), fmt.Sprintf("/index?id=%d", p.ID), fmt.Sprintf("/?id=%d", p.ID), fmt.Sprintf("/posts/%d/old-title", p.ID)} {

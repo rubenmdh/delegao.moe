@@ -51,7 +51,7 @@ func TestPublisherBuildServeAndRestore(t *testing.T) {
 		t.Fatal(err)
 	}
 	status := p.Status()
-	if !status.Ready || status.Building || status.Workers != 2 || status.Pages != 10 || status.BuiltAt.IsZero() {
+	if !status.Ready || status.Building || status.Workers != 2 || status.Pages != 11 || status.BuiltAt.IsZero() {
 		t.Fatalf("unexpected status: %+v", status)
 	}
 	for _, path := range []string{"/", posts[0].URL(), "/posts", "/about-me", "/projects", "/music", "/games", "/contact", "/donate", "/keys"} {
@@ -87,7 +87,7 @@ func TestPublisherBuildServeAndRestore(t *testing.T) {
 	}
 	// Existing public pages must remain readable without a source or SQL access.
 	p.source = func(context.Context, func(Post) error) error { t.Fatal("public read accessed the source"); return nil }
-	if w := readPublished(p, "GET", "/", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "<strong>Public</strong>") {
+	if w := readPublished(p, "GET", "/", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "Public") || !strings.Contains(w.Body.String(), `href="`+posts[0].URL()+`"`) {
 		t.Fatalf("static homepage: %d %s", w.Code, w.Body.String())
 	}
 	restored, err := newPublisher(p.app, p.dir, 1)
@@ -136,7 +136,7 @@ func TestPublisherRemovalRenameAndPagination(t *testing.T) {
 	if err := p.Mutate(context.Background(), func(context.Context) error { posts[0].Published = false; posts[1].Published = false; return nil }); err != nil {
 		t.Fatal(err)
 	}
-	if w := readPublished(p, "GET", "/", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "No posts have been created") {
+	if w := readPublished(p, "GET", "/", nil); w.Code != 200 || !strings.Contains(w.Body.String(), "No posts yet.") {
 		t.Fatal("empty site was not generated")
 	}
 	entries, err := os.ReadDir(p.dir)

@@ -57,10 +57,12 @@ type Publisher struct {
 	source func(context.Context, func(Post) error) error
 }
 
-var publicInformationPages = []string{"about-me", "projects", "music", "games", "contact", "donate", "keys"}
+var publicInformationPages = []string{"about-me", "projects", "services", "music", "games", "contact", "donate", "keys"}
 var generationName = regexp.MustCompile(`^generation-[0-9a-f]{32}$`)
 var publicationFilename = regexp.MustCompile(`^[0-9a-f]{64}\.html$`)
 var publicationETag = regexp.MustCompile(`^"[0-9a-f]{64}"$`)
+
+const homeExcerptRunes = 2000
 
 func newPublisher(a *App, dir string, workers int) (*Publisher, error) {
 	if workers == 0 {
@@ -184,9 +186,6 @@ func (p *Publisher) recordError(err error) {
 type publicationJob struct {
 	path string
 	view View
-	// The latest article produces the homepage using the same body, rather than
-	// queueing a duplicate full-size Markdown body.
-	home bool
 }
 
 func (p *Publisher) rebuild(ctx context.Context) (result error) {
@@ -255,15 +254,6 @@ func (p *Publisher) rebuild(ctx context.Context) (result error) {
 						fail(err)
 						return
 					}
-					if job.home {
-						v := job.view
-						v.Home = true
-						v.Title = "Delegao.moe"
-						if err := write("/", v); err != nil {
-							fail(err)
-							return
-						}
-					}
 				}
 			}
 		}()
@@ -279,6 +269,7 @@ func (p *Publisher) rebuild(ctx context.Context) (result error) {
 	page := 1
 	count := 0
 	var excerpts []Post
+	home := View{Title: "Delegao.moe", Page: "posts", Single: true, Home: true}
 	archive := func(next bool) error {
 		v := View{Title: "News", Page: "posts", Posts: excerpts, PageNumber: page}
 		if page > 1 {
@@ -308,8 +299,17 @@ func (p *Publisher) rebuild(ctx context.Context) (result error) {
 			}
 		}
 		manifest.PostURLs[strconv.FormatInt(post.ID, 10)] = post.URL()
-		if err := send(publicationJob{path: post.URL(), view: View{Title: post.Title, Page: "posts", Single: true, Posts: []Post{post}}, home: count == 0}); err != nil {
+		if err := send(publicationJob{path: post.URL(), view: View{Title: post.Title, Page: "posts", Single: true, Posts: []Post{post}}}); err != nil {
 			return err
+		}
+		if count == 0 {
+			latest := post
+			latest.Body = publicationPrefix(post.Body, homeExcerptRunes)
+			home.Posts = []Post{latest}
+		} else if count < 4 {
+			earlier := post
+			earlier.Body = ""
+			home.Earlier = append(home.Earlier, earlier)
 		}
 		count++
 		// Copy a short prefix so the archive cannot retain a full Markdown body.
@@ -320,8 +320,8 @@ func (p *Publisher) rebuild(ctx context.Context) (result error) {
 	if err == nil {
 		err = archive(false)
 	}
-	if err == nil && count == 0 {
-		err = send(publicationJob{path: "/", view: View{Title: "Delegao.moe", Page: "posts", Single: true, Home: true}})
+	if err == nil {
+		err = send(publicationJob{path: "/", view: home})
 	}
 	for _, page := range publicInformationPages {
 		if err != nil {
@@ -375,9 +375,13 @@ func (p *Publisher) rebuild(ctx context.Context) (result error) {
 }
 
 func publicationExcerpt(source string) string {
+	return publicationPrefix(source, 251)
+}
+
+func publicationPrefix(source string, limit int) string {
 	end, count := len(source), 0
 	for offset := range source {
-		if count == 251 {
+		if count == limit {
 			end = offset
 			break
 		}
