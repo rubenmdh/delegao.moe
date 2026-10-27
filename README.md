@@ -167,6 +167,16 @@ omit these metrics. This adds no polling, JavaScript or external requests.
 Rendering durations use two decimal places and adapt between µs, ms and s. The
 guestbook displays the actual Go runtime version linked to the Go GC article.
 
+Public footers also show a small IPv6 connection indicator using the official
+IPv6-only image endpoint from [ipv6.sx](https://ipv6.sx/embed). A bundled script
+makes one image request directly from the visitor's browser, without cookies
+created by this site, a referrer, API calls, polling or a server-side proxy. A
+successful image load marks IPv6 available; failure or a four-second timeout
+leaves the neutral "not detected" state, which can also indicate blocking or an
+outage. Without JavaScript it remains a link to the full test. Admin and login
+do not load the indicator. The favicon uses the supplied transparent `d` artwork,
+with a multi-size ICO, PNG and Apple touch icon; URLs include content hashes.
+
 The optional 2026 Halloween accent layer runs from 28 October until
 1 November at 23:59:00 in Europe/Madrid (22:59:00 UTC). `seasonal.js` toggles
 the root class on page load and at the deadline, including already-open pages

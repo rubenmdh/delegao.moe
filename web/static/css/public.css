@@ -140,7 +140,12 @@ body.public-site {
 .public-site .public-footer .utility-divider { color: #65787d; }
 .public-site .public-footer a[aria-current="page"] { color: #fff; text-decoration: underline; text-underline-offset: 6px; }
 .public-site .public-footer .caption { color: #819194; display: block; margin-top: 4px; font-size: 11px; }
-.public-site .generation-note { display: block; margin-top: 5px; color: #8b9c9f; font-size: 11px; line-height: 1.7; }
+.public-site .public-footer .footer-details { gap: 0 18px; margin-top: 3px; color: #8b9c9f; font-size: 11px; }
+.public-site .generation-note { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 5px; font-size: inherit; line-height: 1.7; }
+.public-site .public-footer .generation-note a, .public-site .public-footer .ipv6-indicator { min-height: 44px; color: #8b9c9f; }
+.public-site .public-footer .ipv6-indicator { gap: 7px; }
+.public-site .connection-dot { width: 5px; height: 5px; border-radius: 50%; background: #7d8b8e; flex: 0 0 auto; }
+.public-site .ipv6-indicator[data-state="available"] .connection-dot { background: #98b49c; }
 .public-site .guestbook-table { font-size: 14px; }
 .public-site .guestbook-table, .public-site .guestbook-table th, .public-site .guestbook-table td { border-color: var(--public-line); }
 .public-site .guestbook-table time { color: #a4b1b5; }

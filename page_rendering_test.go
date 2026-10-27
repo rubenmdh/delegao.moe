@@ -45,6 +45,10 @@ func TestRenderingFooterScope(t *testing.T) {
 		if tc.want && !strings.Contains(string(body), runtime.Version()+" in ") {
 			t.Fatal("guestbook does not show the actual Go runtime version")
 		}
+		public := !tc.view.Admin && tc.view.Page != "login"
+		if strings.Contains(string(body), "data-ipv6-indicator") != public {
+			t.Errorf("page %s admin=%v: wrong IPv6 indicator scope", tc.view.Page, tc.view.Admin)
+		}
 	}
 }
 
