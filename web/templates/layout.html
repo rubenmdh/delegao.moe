@@ -1,20 +1,21 @@
 {{define "layout"}}<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{.Title}}{{if ne .Title "Delegao.moe"}} - Delegao.moe{{end}}</title>
-<link rel="stylesheet" href="/css/bootstrap.min.css"><link rel="stylesheet" href="/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><script src="/js/site.js" defer></script>
-{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="/css/admin.css"><script src="/js/admin.js" defer></script>{{end}}</head>
+<link rel="stylesheet" href="{{asset "css/bootstrap.min.css"}}"><link rel="stylesheet" href="{{asset "css/all.min.css"}}"><link rel="stylesheet" href="{{asset "css/custom.css"}}"><script src="{{asset "js/site.js"}}" defer></script>
+{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="{{asset "css/admin.css"}}"><script src="{{asset "js/admin.js"}}" defer></script>{{end}}</head>
 <body><div id="background"></div><div id="background-cover"></div>
-{{if .Admin}}
 <a class="sr-only sr-only-focusable" href="#main-content">Skip to content</a>
+{{if .Admin}}
 {{template "admin-nav" .}}
 <main id="main-content" class="container card shadow text-white mb-5"><div class="card-body">{{template "content" .}}</div></main>
-{{else if eq .Page "login"}}<main class="container card text-white mt-5 mb-5 admin-login"><div class="card-body">{{template "content" .}}</div></main>
+{{else if eq .Page "login"}}<main id="main-content" class="container card text-white mt-5 mb-5 admin-login"><div class="card-body">{{template "content" .}}</div></main>
 {{else}}
-<main class="container text-white site-content">
+{{template "mobile-navigation" .}}
+<main id="main-content" class="container text-white site-content">
 {{if .Wide}}
  <div class="card"><div class="card-body">{{template "content" .}}</div></div>
- <div class="card mt-4 p-3"><a href="/">&lt; Go back</a><span class="h4 font-weight-light mt-2"><b>delegao</b>.moe</span></div>
-{{else}}<div class="row"><aside id="memo" class="col-12 col-lg-4 order-lg-2 mb-5">{{template "sidebar" .}}</aside><section id="blog" class="col-12 col-lg-8 order-lg-1 mb-5">{{template "content" .}}</section></div>{{end}}
+ <div class="card mt-4 p-3"><a class="site-back-link" href="/">&lt; Go back</a><span class="h4 font-weight-light mt-2"><b>delegao</b>.moe</span></div>
+{{else}}<div class="row"><section id="blog" class="col-12 col-lg-8 mb-5">{{template "content" .}}</section><aside id="memo" class="col-12 col-lg-4 mb-5">{{template "sidebar" .}}</aside></div>{{end}}
 </main>{{end}}</body></html>{{end}}
 
 {{define "content"}}

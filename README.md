@@ -142,6 +142,13 @@ Drafts return 404 publicly. Destructive GET endpoints are unavailable.
 - `/admin/guestbook`: dynamic entry management; emails are admin-only.
 - `/guestbook`: public reading/signing; `/login` and POST `/logout` manage sessions.
 
+On mobile, public pages put content before the profile and share a compact
+navigation menu, including the wide pages. The menu works without JavaScript;
+JavaScript adds dismissal with Escape or a tap outside. Guestbook entries stack
+their fields on narrow screens, retaining the desktop table and admin-only data.
+CSS and script URLs include content hashes so an update takes effect without
+waiting for the previous browser cache to expire.
+
 ## Configuration and security
 
 `ADDR` defaults to `127.0.0.1:8080`. The Orange Pi deployment example uses

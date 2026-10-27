@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"embed"
 	"errors"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log/slog"
@@ -51,7 +52,16 @@ type View struct {
 
 func newApp(store *Store, secure bool, answer string) (*App, error) {
 	a := &App{store: store, security: newSecurity(secure), answer: answer, markdown: goldmark.New(goldmark.WithExtensions(extension.GFM))}
-	funcs := template.FuncMap{"route": route, "markdown": a.renderMarkdown, "date": func(t time.Time) string { return t.Format("2006-01-02 15:04") }, "excerpt": func(s string) string {
+	assets, err := loadAssetURLs(web)
+	if err != nil {
+		return nil, fmt.Errorf("load bundled assets: %w", err)
+	}
+	funcs := template.FuncMap{"asset": func(path string) (string, error) {
+		if address, ok := assets[path]; ok {
+			return address, nil
+		}
+		return "", fmt.Errorf("unknown bundled asset: %s", path)
+	}, "route": route, "markdown": a.renderMarkdown, "date": func(t time.Time) string { return t.Format("2006-01-02 15:04") }, "excerpt": func(s string) string {
 		r := []rune(s)
 		if len(r) > 250 {
 			return string(r[:250]) + "…"
