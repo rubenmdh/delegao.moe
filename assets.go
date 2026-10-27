@@ -11,7 +11,7 @@ import (
 // even when a visitor still has the previous files cached for a day.
 func loadAssetURLs(source fs.FS) (map[string]string, error) {
 	urls := make(map[string]string)
-	for _, pattern := range []string{"web/static/css/*.css", "web/static/js/*.js"} {
+	for _, pattern := range []string{"web/static/css/*.css", "web/static/js/*.js", "web/static/img/favicon.*", "web/static/img/apple-touch-icon.png"} {
 		paths, err := fs.Glob(source, pattern)
 		if err != nil {
 			return nil, err

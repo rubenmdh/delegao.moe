@@ -44,3 +44,26 @@ func TestVersionedStylesheetIsRenderedAndServed(t *testing.T) {
 		t.Fatal("versioned stylesheet is not served with browser caching")
 	}
 }
+
+func TestFaviconsAreLinkedAndServed(t *testing.T) {
+	a := testApp(t, nil)
+	assets, err := loadAssetURLs(web)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"/about-me", "/login"} {
+		page := httptest.NewRecorder()
+		a.handler().ServeHTTP(page, httptest.NewRequest("GET", path, nil))
+		for _, name := range []string{"img/favicon.ico", "img/favicon.png", "img/apple-touch-icon.png"} {
+			address := assets[name]
+			if address == "" || !strings.Contains(page.Body.String(), `href="`+address+`"`) {
+				t.Fatalf("%s does not link favicon %s", path, name)
+			}
+			icon := httptest.NewRecorder()
+			a.handler().ServeHTTP(icon, httptest.NewRequest("GET", address, nil))
+			if icon.Code != 200 || icon.Body.Len() == 0 || !strings.HasPrefix(icon.Header().Get("Content-Type"), "image/") {
+				t.Fatalf("favicon %s is unavailable or has the wrong content type", name)
+			}
+		}
+	}
+}
