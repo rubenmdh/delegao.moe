@@ -140,6 +140,14 @@ no se añade al historial, a argumentos del proceso ni a registros. La conexión
 MySQL exige TLS verificado. Si el proveedor usa una CA privada, añade al entorno
 `MYSQL_SOURCE_CA=/ruta/ca-del-proveedor.pem`, legible por el usuario `delegao`.
 
+Si has aceptado explícitamente un certificado autofirmado, incluso sin nombre
+de dominio, puedes usar `MYSQL_SOURCE_SHA256` con su huella SHA-256 completa
+(con o sin dos puntos). Añade `export MYSQL_SOURCE_SHA256="HUELLA_ACEPTADA"`
+dentro del `sh -c` anterior, antes de `exec`. Esta opción exige TLS y comprueba
+la huella exacta y la vigencia del certificado en cada conexión, sustituyendo
+la comprobación de CA y nombre. Un certificado renovado requiere aceptar su
+nueva huella. No combines esta opción con `MYSQL_SOURCE_CA`.
+
 El importador solo lee el origen, en una instantánea consistente, y escribe el
 destino en una transacción. Conserva los IDs, fechas, etiquetas, borradores,
 entradas del guestbook y hashes de contraseña. Normaliza una sola vez el texto

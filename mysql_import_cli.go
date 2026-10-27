@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"golang.org/x/term"
@@ -61,6 +65,40 @@ func mysqlSourceConfig(host, database, username, caPath string) (*mysql.Config, 
 	return cfg, nil
 }
 
+// Pinning is opt-in for an explicitly trusted self-signed source. The leaf
+// certificate's exact SHA-256 digest replaces CA/name validation, never TLS.
+func pinMySQLSourceCertificate(cfg *mysql.Config, fingerprint string) error {
+	expected, err := hex.DecodeString(strings.ReplaceAll(strings.TrimSpace(fingerprint), ":", ""))
+	if err != nil || len(expected) != sha256.Size {
+		return errors.New("MYSQL_SOURCE_SHA256 must be a SHA-256 certificate fingerprint")
+	}
+	if cfg == nil || cfg.TLS == nil {
+		return errors.New("certificate pinning requires a TLS source configuration")
+	}
+	if cfg.TLS.RootCAs != nil {
+		return errors.New("choose MYSQL_SOURCE_CA or MYSQL_SOURCE_SHA256, not both")
+	}
+	cfg.TLS = cfg.TLS.Clone()
+	// VerifyConnection below authenticates the accepted leaf instead of PKI.
+	cfg.TLS.InsecureSkipVerify = true
+	cfg.TLS.VerifyConnection = func(state tls.ConnectionState) error {
+		if len(state.PeerCertificates) == 0 {
+			return errors.New("MySQL source did not provide a TLS certificate")
+		}
+		cert := state.PeerCertificates[0]
+		actual := sha256.Sum256(cert.Raw)
+		if subtle.ConstantTimeCompare(actual[:], expected) != 1 {
+			return errors.New("MySQL source certificate does not match MYSQL_SOURCE_SHA256")
+		}
+		now := time.Now()
+		if now.Before(cert.NotBefore) || now.After(cert.NotAfter) {
+			return errors.New("pinned MySQL source certificate is outside its validity period")
+		}
+		return nil
+	}
+	return nil
+}
+
 func runMySQLImport(ctx context.Context, target *Store, args []string) error {
 	if len(args) != 3 {
 		return errors.New("usage: delegao import-mysql HOST DATABASE USERNAME (password is prompted)")
@@ -71,6 +109,11 @@ func runMySQLImport(ctx context.Context, target *Store, args []string) error {
 	cfg, err := mysqlSourceConfig(args[0], args[1], args[2], os.Getenv("MYSQL_SOURCE_CA"))
 	if err != nil {
 		return err
+	}
+	if fingerprint := os.Getenv("MYSQL_SOURCE_SHA256"); fingerprint != "" {
+		if err := pinMySQLSourceCertificate(cfg, fingerprint); err != nil {
+			return err
+		}
 	}
 	fmt.Fprint(os.Stderr, "MySQL source password (hidden): ")
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))

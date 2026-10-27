@@ -57,6 +57,13 @@ SQLite avoids remote round trips and running a local MySQL daemon. It does not
 make SD-card latency or durability disappear. Keep backups outside the board.
 For concurrent writers across multiple hosts, use the MySQL backend instead.
 
+The `import-mysql` CLI verifies source TLS by default. For a private CA, set
+`MYSQL_SOURCE_CA` to its PEM file. An explicitly trusted self-signed source can
+instead use `MYSQL_SOURCE_SHA256` with its full leaf-certificate fingerprint.
+Pinning checks that exact certificate and its validity period, replacing CA
+and hostname checks. Do not combine these options; certificate rotation requires
+updating the accepted pin. These settings apply only to the import CLI.
+
 ## Hybrid publication
 
 The configured database is the editable source of truth for blog posts. Public
