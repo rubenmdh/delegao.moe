@@ -37,6 +37,7 @@ type App struct {
 	dummyHash []byte
 }
 type View struct {
+	Rendering                              *PageRendering
 	Dashboard                              AdminDashboard
 	Publication                            AdminPublication
 	Query, Filter, Notice                  string
@@ -185,14 +186,14 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, status int, v View)
 		v.CSRF = s.CSRF
 	}
 	v.User = s.User
-	var b bytes.Buffer
-	if err := a.templates.ExecuteTemplate(&b, "layout", v); err != nil {
+	body, err := a.renderPage(v)
+	if err != nil {
 		a.fail(w, err)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
-	_, _ = w.Write(b.Bytes())
+	_, _ = w.Write(body)
 }
 func (a *App) fail(w http.ResponseWriter, err error) {
 	slog.Error("request failed", "error", err)

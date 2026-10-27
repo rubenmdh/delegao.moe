@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -223,14 +222,14 @@ func (p *Publisher) rebuild(ctx context.Context) (result error) {
 		if err := buildCtx.Err(); err != nil {
 			return err
 		}
-		var html bytes.Buffer
-		if err := p.app.templates.ExecuteTemplate(&html, "layout", v); err != nil {
+		html, err := p.app.renderPage(v)
+		if err != nil {
 			return fmt.Errorf("render %s: %w", path, err)
 		}
 		key := sha256.Sum256([]byte(path))
 		fileName := hex.EncodeToString(key[:]) + ".html"
-		checksum := sha256.Sum256(html.Bytes())
-		if err := writePublicationFile(filepath.Join(staging, fileName), html.Bytes()); err != nil {
+		checksum := sha256.Sum256(html)
+		if err := writePublicationFile(filepath.Join(staging, fileName), html); err != nil {
 			return err
 		}
 		fileMu.Lock()
