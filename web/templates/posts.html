@@ -1,0 +1,15 @@
+{{define "posts"}}
+{{if .Admin}}
+<h1 class="h3">News management <a class="btn btn-primary float-right" href="{{route "admin.posts.create"}}">New post</a></h1>
+<div class="table-responsive"><table class="table table-bordered"><thead><tr><th>Title</th><th>Status</th><th>Tags</th><th>Posted by</th><th>Date</th><th>Actions</th></tr></thead><tbody>
+{{range .Posts}}<tr><td>{{.Title}}</td><td>{{if .Published}}Published{{else}}Draft{{end}}</td><td>{{.Tags}}</td><td>{{.Author}}</td><td>{{date .Created}}</td><td><a class="btn btn-secondary btn-sm" href="{{route "admin.posts.edit" .ID}}">Modify</a>
+<form class="d-inline" method="post" action="{{route "admin.posts.delete" .ID}}" data-confirm="Delete this post?"><input type="hidden" name="csrf" value="{{$.CSRF}}"><button class="btn btn-danger btn-sm">Delete</button></form></td></tr>
+{{else}}<tr><td colspan="6">No posts have been created yet.</td></tr>{{end}}</tbody></table></div>
+{{else}}
+{{range .Posts}}<article class="card mb-5"><div class="card-body">
+{{if and $.Single (not $.Home)}}<a href="/" class="btn btn-primary btn-sm mb-3">&lt; Go back</a>{{end}}
+<h1 class="h4 card-title">{{.Title}}</h1><p class="card-subtitle mb-4 text-muted"><i class="fas fa-user" aria-hidden="true"></i> {{.Author}} &nbsp; <i class="fas fa-calendar-alt" aria-hidden="true"></i> {{date .Created}}{{if .Updated}} <i>(updated on {{date .Updated}})</i>{{end}}</p>
+{{if $.Single}}<div class="post-body">{{markdown .Body}}</div><hr><a href="{{route "posts.index"}}">Older posts</a>
+{{else}}<p class="card-text">{{excerpt .Body}}</p><a href="{{.URL}}" class="btn btn-outline-primary btn-sm">Read more</a>{{end}}</div></article>
+{{else}}<div class="card"><div class="card-body"><h1 class="h4">No posts have been created yet.</h1><p>Maybe it is the time to write your first post?</p></div></div>{{end}}
+{{end}}{{template "pagination" .}}{{end}}

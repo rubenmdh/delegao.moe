@@ -1,0 +1,40 @@
+{{define "layout"}}<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{.Title}}{{if ne .Title "Delegao.moe"}} - Delegao.moe{{end}}</title>
+<link rel="stylesheet" href="/css/bootstrap.min.css"><link rel="stylesheet" href="/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><script src="/js/site.js" defer></script></head>
+<body><div id="background"></div><div id="background-cover"></div>
+{{if .Admin}}{{template "admin-nav" .}}{{end}}
+<main class="container text-white site-content {{if .Admin}}admin-content{{end}}">
+{{if .Wide}}
+ <div class="card"><div class="card-body">{{template "content" .}}</div></div>
+ {{if not .Admin}}<div class="card mt-4 p-3"><a href="/">&lt; Go back</a><span class="h4 font-weight-light mt-2"><b>delegao</b>.moe</span></div>{{end}}
+{{else}}<div class="row"><aside id="memo" class="col-12 col-lg-4 order-lg-2 mb-5">{{template "sidebar" .}}</aside><section id="blog" class="col-12 col-lg-8 order-lg-1 mb-5">{{template "content" .}}</section></div>{{end}}
+</main></body></html>{{end}}
+
+{{define "content"}}
+{{if .Error}}<div class="alert alert-danger" role="alert">{{.Error}}</div>{{end}}
+{{if eq .Page "posts"}}{{template "posts" .}}
+{{else if eq .Page "guestbook"}}{{template "guestbook" .}}
+{{else if eq .Page "login"}}{{template "login" .}}
+{{else if eq .Page "editor"}}{{template "editor" .}}
+{{else if eq .Page "dashboard"}}<h1 class="h3">Welcome, {{.User}}</h1><p>Manage your posts and guestbook from the navigation above.</p><a href="/" class="btn btn-primary">Visit website</a>
+{{else}}{{if not .Wide}}<div class="card"><div class="card-body">{{end}}
+{{if eq .Page "about-me"}}{{template "page-about-me" .}}
+{{else if eq .Page "projects"}}{{template "page-projects" .}}
+{{else if eq .Page "music"}}{{template "page-music" .}}
+{{else if eq .Page "games"}}{{template "page-games" .}}
+{{else if eq .Page "contact"}}{{template "page-contact" .}}
+{{else if eq .Page "donate"}}{{template "page-donate" .}}
+{{else if eq .Page "keys"}}{{template "page-keys" .}}{{end}}
+{{if not .Wide}}</div></div>{{end}}{{end}}
+{{end}}
+
+{{define "pagination"}}<nav aria-label="Pagination" class="mt-4">
+{{if .Previous}}<a class="btn btn-secondary" href="?page={{.Previous}}">&lt; Previous</a>{{end}}
+{{if .Next}}<a class="btn btn-primary" href="?page={{.Next}}">Next &gt;</a>{{end}}</nav>{{end}}
+
+{{define "admin-nav"}}<nav class="container"><div class="navbar navbar-dark card mt-3 admin-nav">
+<a class="navbar-brand" href="{{route "admin"}}">delegao.moe area 51</a><div class="d-flex flex-wrap align-items-center">
+<a class="nav-link" href="{{route "admin.posts"}}">News</a><a class="nav-link" href="{{route "admin.guests"}}">Guestbook</a><span class="mr-3">Logged in as {{.User}}</span>
+<form action="{{route "logout"}}" method="post"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="btn btn-outline-light btn-sm">Logout</button></form>
+</div></div></nav>{{end}}

@@ -1,0 +1,5 @@
+.tools/
+.env
+/delegao
+/delegao.exe
+/coverage.out

@@ -1,0 +1,63 @@
+/* Custom CSS for Delegao.moe */
+
+#background{
+  background: no-repeat center center fixed url('../img/bg/img1.gif');
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background-size: cover;
+}
+
+#background-cover {
+  background-color: #1d1f21;
+  opacity: 0.8;
+}
+
+#background, #background-cover {
+  margin: auto; position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+}
+
+#menu .display-4{
+  font-size: 1.25rem;
+}
+
+@media (min-width: 1200px) {
+  .container{
+    max-width: 1450px;
+  }
+  #memo .card {
+     position:fixed;
+     max-width: calc((min(100vw, 1450px) - 60px) / 3);
+     max-height: calc(100vh - 8rem);
+     overflow-y: auto;
+  }
+}
+
+.card{
+  background-color: rgba(29, 31, 33, 0.7);
+}
+
+.avatar{
+  vertical-align: middle;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+}
+
+/* Shared layout and accessible controls; retain the original Bootstrap theme. */
+body { overflow-x: hidden; }
+.site-content { margin-top: 6.5rem; margin-bottom: 6.5rem; }
+.admin-content { margin-top: 2rem; }
+.admin-nav { flex-direction: row; color: white; }
+.table { color: white; }
+.underlined { text-decoration: underline; }
+.login-form { max-width: 550px; }
+.guest-comment { white-space: pre-wrap; overflow-wrap: anywhere; }
+.guest-dialog { border: 0; padding: 0; width: min(94vw, 500px); max-height: 90vh; overflow-y: auto; color: #212529; background: transparent; border-radius: .3rem; }
+.guest-dialog::backdrop { background: rgba(0,0,0,.6); }
+.post-body img, #blog img { max-width: 100%; height: auto; }
+.post-body pre { color: #ddd; background: #151719; padding: 1rem; overflow-x: auto; }
+.post-body { overflow-wrap: anywhere; }
+.img-thumbnail { padding: .25rem; background-color: #262626; border: 1px; border-radius: .6rem; max-width: 25% !important; height: auto; }
+@media (max-width:575px) { .site-content { margin-top: 2rem; } .avatar { width: 200px; height: 200px; } }

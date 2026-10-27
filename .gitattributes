@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Preserve bundled vendor assets exactly as supplied.
+web/static/css/*.min.css -text
+web/static/webfonts/* -text
