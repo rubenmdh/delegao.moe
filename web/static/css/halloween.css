@@ -55,6 +55,7 @@ html.season-halloween .public-site .post-date { color: #b29b96; }
 html.season-halloween .public-site .read-post,
 html.season-halloween .public-site .archive-link,
 html.season-halloween .public-site .back-link { color: #dfb78f; }
+html.season-halloween .public-site .public-footer i { color: #c29b78; }
 html.season-halloween .public-site a:focus-visible,
 html.season-halloween .public-site button:focus-visible { outline-color: #d5aa7d; }
 @media (max-width: 760px) {

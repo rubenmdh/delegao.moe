@@ -17,5 +17,5 @@
 {{define "service-links"}}{{range services}}<a target="_blank" rel="noopener noreferrer" href="{{.URL}}">{{.Name}}</a>{{end}}{{end}}
 
 {{define "public-footer"}}<footer class="public-footer">
-<div><a href="{{route "guestbook"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}>guestbook</a><span aria-hidden="true">·</span><a href="/keys" {{if eq .Page "keys"}}aria-current="page"{{end}}>gpg</a><span aria-hidden="true">·</span><a href="/donate" {{if eq .Page "donate"}}aria-current="page"{{end}}>donate</a></div>
+<div><a href="{{route "guestbook"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}><i class="far fa-address-book" aria-hidden="true"></i>guestbook</a><span class="utility-divider" aria-hidden="true">·</span><a href="/keys" {{if eq .Page "keys"}}aria-current="page"{{end}}><i class="fas fa-key" aria-hidden="true"></i>gpg</a><span class="utility-divider" aria-hidden="true">·</span><a href="/donate" {{if eq .Page "donate"}}aria-current="page"{{end}}><i class="far fa-heart" aria-hidden="true"></i>donate</a></div>
 </footer>{{end}}
