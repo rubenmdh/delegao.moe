@@ -276,6 +276,37 @@ Para restaurar una copia verificada, detén Go, conserva el conjunto actual
 reconstruye antes de arrancar. No mezcles un `.db` restaurado con el WAL de otra
 base. Mantén un único proceso controlando el directorio de publicación.
 
+### Actualizar el programa después del despliegue
+
+Para aplicar el diseño aprobado A a una instalación Go existente, copia el
+nuevo binario ARMv7 desde PowerShell en tu PC:
+
+```powershell
+scp ./dist/delegao-linux-armv7 root@IP_ORANGE_PI:/root/delegao-new
+```
+
+En PuTTY, como root, conserva el binario anterior e instala el nuevo mediante
+un cambio de nombre atómico. La configuración de nginx, el entorno y la base
+SQLite activa se conservan:
+
+```sh
+cp -p /usr/local/bin/delegao \
+  "/root/delegao-migration/delegao-before-update-$(date +%Y%m%d-%H%M%S)"
+install -o root -g root -m 0755 /root/delegao-new /usr/local/bin/delegao.next
+mv -f /usr/local/bin/delegao.next /usr/local/bin/delegao
+systemctl restart delegao
+journalctl -u delegao -n 25 --no-pager
+curl --fail --retry 10 --retry-connrefused --retry-delay 1 \
+  --max-time 5 -I http://127.0.0.1:18080/
+```
+
+No ejecutes `import-mysql` ni crees otra base para esta actualización. El
+arranque genera las páginas con el nuevo diseño y sus URLs de CSS actualizadas.
+Revisa la portada, `/posts`, `/services`, un artículo, el guestbook y el panel.
+El reinicio cierra las sesiones, por lo que tendrás que iniciar sesión otra vez.
+Esta actualización cambia la presentación; la reparación de texto heredado es
+una operación independiente que se describe a continuación.
+
 ### Acentos o emojis con doble codificación
 
 Si aparecen secuencias como `RubÃ©n` o `â€™`, revisa los bytes y la codificación
