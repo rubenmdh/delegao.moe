@@ -62,8 +62,8 @@ func TestPublisherBuildServeAndRestore(t *testing.T) {
 		if strings.Contains(w.Body.String(), "Secret draft") || strings.Contains(w.Body.String(), `name="csrf"`) || strings.Contains(w.Body.String(), "<script>bad") {
 			t.Fatalf("private or unsafe content generated on %s", path)
 		}
-		if !strings.Contains(w.Body.String(), "HTML generated in ") {
-			t.Fatalf("rendering metadata missing from static page %s", path)
+		if strings.Contains(w.Body.String(), "HTML generated in ") {
+			t.Fatalf("rendering metadata exposed on static page %s", path)
 		}
 	}
 	for _, path := range []string{"/posts/41/secret-draft", "/admin", "/login", "/guestbook", "/current.json", "/manifest.json", "/posts/999/missing", "/?id="} {

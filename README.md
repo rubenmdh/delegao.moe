@@ -157,13 +157,12 @@ table and admin-only data. Administration and login retain the classic theme.
 CSS and script URLs include content hashes so an update takes effect without
 waiting for the previous browser cache to expire.
 
-The public footer records the HTML generation time (through rendering the page
+The dynamic guestbook footer records the HTML generation time (through rendering the page
 body, excluding database queries, disk writes and network delivery) and, on
 Linux, the system's one-minute load average from `/proc/loadavg`. Load is not a
 CPU utilization percentage; unavailable measurements are omitted. Both values
-are embedded when generating a static page and remain unchanged until the next
-publication. The dynamic guestbook records them on each render. This adds no
-polling, JavaScript, external requests or per-visit work to static publications.
+are recorded on each guestbook render. Static pages, administration and login
+omit these metrics. This adds no polling, JavaScript or external requests.
 
 The optional 2026 Halloween accent layer runs from 28 October until
 1 November at 23:59:00 in Europe/Madrid (22:59:00 UTC). `seasonal.js` toggles

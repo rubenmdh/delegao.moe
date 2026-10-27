@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// PageRendering is sampled while generating HTML, never while serving a cached
-// publication. Load is the system's one-minute load average, not a CPU percentage.
+// PageRendering is sampled for the dynamic public guestbook only.
+// Load is the system's one-minute load average, not a CPU percentage.
 type PageRendering struct {
 	started time.Time
 	Load    string
@@ -27,7 +27,8 @@ func (p *PageRendering) Elapsed() string {
 }
 
 func (a *App) renderPage(v View) ([]byte, error) {
-	if !v.Admin && v.Page != "login" {
+	v.Rendering = nil
+	if !v.Admin && v.Page == "guestbook" {
 		v.Rendering = &PageRendering{started: time.Now(), Load: systemLoad()}
 	}
 	var html bytes.Buffer

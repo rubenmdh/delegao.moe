@@ -26,8 +26,11 @@ func TestRenderingFooterScope(t *testing.T) {
 		view View
 		want bool
 	}{
-		{View{Page: "about-me", Title: "About"}, true},
+		{View{Page: "about-me", Title: "About"}, false},
+		{View{Page: "posts", Title: "Blog", Home: true}, false},
+		{View{Page: "posts", Title: "Posts"}, false},
 		{View{Page: "guestbook", Title: "Guestbook"}, true},
+		{View{Page: "guestbook", Title: "Guestbook", Admin: true}, false},
 		{View{Page: "login", Title: "Login"}, false},
 		{View{Page: "posts", Title: "Posts", Admin: true}, false},
 	} {
