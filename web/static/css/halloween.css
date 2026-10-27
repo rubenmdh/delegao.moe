@@ -26,10 +26,10 @@ html.season-halloween .public-site .public-identity img {
 html.season-halloween .public-site .public-avatar::before {
   content: "";
   position: absolute;
-  width: 64px;
-  height: 46px;
-  left: -5px;
-  top: -23px;
+  width: 58px;
+  height: 42px;
+  left: -2px;
+  top: -20px;
   background: url('../img/halloween-hat.svg') center/contain no-repeat;
   transform: rotate(-9deg);
   transform-origin: 50% 90%;
