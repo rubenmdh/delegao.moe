@@ -258,13 +258,18 @@ Instala el helper de backup:
 ```sh
 install -o root -g root -m 0750 ~/deploy-delegao/backup-sqlite.sh \
   /usr/local/sbin/delegao-backup-sqlite
-/usr/local/sbin/delegao-backup-sqlite
+set -a
+. /etc/delegao.env
+set +a
+/usr/local/sbin/delegao-backup-sqlite "$DATABASE_DSN"
 ```
 
 Usa la API online de SQLite y verifica la copia con `quick_check`. Se puede
 usar mientras Go está funcionando. No copies únicamente el `.db` en caliente:
 con WAL activo puede haber cambios confirmados en el archivo `-wal`. Guarda
 las copias fuera de la SD y conserva una copia protegida de `/etc/delegao.env`.
+Pasa siempre la ruta de `DATABASE_DSN`: durante el corte se puede haber elegido
+un nombre nuevo, como `site-final.db`, en lugar del `site.db` del ejemplo.
 
 Para restaurar una copia verificada, detén Go, conserva el conjunto actual
 `.db`, `-wal` y `-shm` si existe, restaura la copia con propietario `delegao` y
