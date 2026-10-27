@@ -61,6 +61,7 @@ var routes = map[string]string{
 	"admin.posts.edit": "/admin/posts/{id}/edit", "admin.posts.update": "/admin/posts/{id}",
 	"admin.posts.delete": "/admin/posts/{id}/delete", "admin.guests": "/admin/guestbook",
 	"admin.guests.delete": "/admin/guestbook/{id}/delete",
+	"admin.preview":       "/admin/posts/preview", "admin.rebuild": "/admin/rebuild",
 }
 
 func route(name string, values ...any) string {

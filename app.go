@@ -26,6 +26,7 @@ import (
 var web embed.FS
 
 type App struct {
+	publisher *Publisher
 	proxies   []netip.Prefix
 	store     *Store
 	security  *security
@@ -35,6 +36,7 @@ type App struct {
 	dummyHash []byte
 }
 type View struct {
+	Notice                                 string
 	Title, Page, CSRF, User, Error, Action string
 	Posts                                  []Post
 	Post                                   Post
@@ -77,6 +79,10 @@ func (a *App) handler() http.Handler {
 	bind("GET", "posts.show", a.postShow)
 	for _, p := range []string{"about-me", "projects", "music", "games", "contact", "donate", "keys"} {
 		mux.HandleFunc("GET /"+p, func(w http.ResponseWriter, r *http.Request) {
+			if a.publisher != nil {
+				a.publisher.ServeHTTP(w, r)
+				return
+			}
 			a.render(w, r, 200, View{Page: p, Title: strings.ToUpper(p[:1]) + p[1:], Wide: p == "donate" || p == "keys"})
 		})
 	}
@@ -87,6 +93,7 @@ func (a *App) handler() http.Handler {
 	bind("POST", "logout", a.logout)
 	bind("GET", "admin", a.auth(a.dashboard))
 	bind("GET", "admin.posts", a.auth(a.postList))
+	bind("POST", "admin.rebuild", a.auth(a.rebuildPublic))
 	bind("GET", "admin.posts.create", a.auth(a.postForm))
 	bind("POST", "admin.posts", a.auth(a.savePost))
 	bind("GET", "admin.posts.edit", a.auth(a.postForm))
@@ -144,6 +151,9 @@ func (a *App) auth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 func (a *App) render(w http.ResponseWriter, r *http.Request, status int, v View) {
+	if v.Notice == "" {
+		v.Notice = map[string]string{"saved": "Post saved and publication updated.", "deleted": "Post deleted and publication updated.", "rebuilt": "Public pages rebuilt successfully.", "guest-deleted": "Guestbook entry deleted."}[r.URL.Query().Get("notice")]
+	}
 	v.Admin = strings.HasPrefix(r.URL.Path, "/admin")
 	v.Wide = v.Wide || v.Admin || v.Page == "login" || v.Page == "guestbook"
 	s, ok := a.security.current(r)
@@ -185,6 +195,10 @@ func id(r *http.Request) (int64, error) {
 	return n, nil
 }
 func (a *App) home(w http.ResponseWriter, r *http.Request) {
+	if a.publisher != nil {
+		a.publisher.ServeHTTP(w, r)
+		return
+	}
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
@@ -205,6 +219,10 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 	a.render(w, r, 200, v)
 }
 func (a *App) postList(w http.ResponseWriter, r *http.Request) {
+	if a.publisher != nil && !strings.HasPrefix(r.URL.Path, "/admin") {
+		a.publisher.ServeHTTP(w, r)
+		return
+	}
 	admin := strings.HasPrefix(r.URL.Path, "/admin")
 	p := page(r)
 	posts, err := a.store.posts(r.Context(), admin, p)
@@ -223,6 +241,10 @@ func (a *App) postList(w http.ResponseWriter, r *http.Request) {
 	a.render(w, r, 200, v)
 }
 func (a *App) postShow(w http.ResponseWriter, r *http.Request) {
+	if a.publisher != nil {
+		a.publisher.ServeHTTP(w, r)
+		return
+	}
 	n, err := id(r)
 	if err != nil {
 		http.NotFound(w, r)
@@ -346,9 +368,6 @@ func (a *App) logout(w http.ResponseWriter, r *http.Request) {
 	a.security.logout(w, r)
 	http.Redirect(w, r, route("home"), 303)
 }
-func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
-	a.render(w, r, 200, View{Page: "dashboard", Title: "Dashboard"})
-}
 func (a *App) postForm(w http.ResponseWriter, r *http.Request) {
 	p := Post{}
 	if r.PathValue("id") != "" {
@@ -385,7 +404,8 @@ func (a *App) savePost(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		if _, err = a.store.post(r.Context(), n, true); errors.Is(err, sql.ErrNoRows) {
+		original, err := a.store.post(r.Context(), n, true)
+		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
 			return
 		} else if err != nil {
@@ -393,16 +413,35 @@ func (a *App) savePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		p.ID = n
+		p.Author = original.Author
+		p.Created = original.Created
+		p.Updated = original.Updated
 	}
 	if !valid(p.Title, 1, 255) || !valid(p.Body, 1, 500000) || !valid(p.Tags, 0, 1000) || (field(r, "status") != "0" && field(r, "status") != "1") {
 		a.renderPostForm(w, r, 422, p, "Please check the title, body, tags and publication status.")
 		return
 	}
-	if err := a.store.savePost(r.Context(), p); err != nil {
-		a.fail(w, err)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 2*time.Minute)
+	defer cancel()
+	if err := a.mutatePublic(ctx, func(ctx context.Context) error {
+		if p.ID != 0 {
+			if _, err := a.store.post(ctx, p.ID, true); err != nil {
+				return err
+			}
+		}
+		savedID, err := a.store.savePostRecord(ctx, p)
+		if err != nil {
+			return err
+		}
+		p.ID = savedID
+		p, err = a.store.post(ctx, savedID, true)
+		return err
+	}); err != nil {
+		slog.Error("save/publication failed", "error", err)
+		a.renderPostForm(w, r, 503, p, "The operation did not complete. Check the saved post in administration before trying again. If it is saved in MySQL, rebuild the public pages from the dashboard; public pages stay unavailable until publication succeeds.")
 		return
 	}
-	http.Redirect(w, r, route("admin.posts"), 303)
+	http.Redirect(w, r, route("admin.posts")+"?notice=saved", 303)
 }
 func (a *App) deletePost(w http.ResponseWriter, r *http.Request) {
 	a.remove(w, r, "news", "admin.posts")
@@ -416,21 +455,45 @@ func (a *App) remove(w http.ResponseWriter, r *http.Request, table, target strin
 		http.NotFound(w, r)
 		return
 	}
-	err = a.store.delete(r.Context(), table, n)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 2*time.Minute)
+	defer cancel()
+	if table == "news" {
+		err = a.mutatePublic(ctx, func(ctx context.Context) error { return a.store.delete(ctx, table, n) })
+	} else {
+		err = a.store.delete(ctx, table, n)
+	}
 	if errors.Is(err, sql.ErrNoRows) {
 		http.NotFound(w, r)
 		return
 	}
 	if err != nil {
-		a.fail(w, err)
+		slog.Error("deletion/publication failed", "error", err)
+		a.render(w, r, 503, View{Page: "dashboard", Title: "Publication needs attention", Error: "The operation did not complete. Check the current records before retrying. If the database changed, rebuild public pages from the dashboard to restore publication."})
 		return
 	}
-	http.Redirect(w, r, route(target), 303)
+	notice := "deleted"
+	if table == "guestbook" {
+		notice = "guest-deleted"
+	}
+	http.Redirect(w, r, route(target)+"?notice="+notice, 303)
 }
 func (a *App) redirectPost(w http.ResponseWriter, r *http.Request, value string) {
 	n, err := strconv.ParseInt(value, 10, 64)
 	if err != nil || n < 1 {
 		http.NotFound(w, r)
+		return
+	}
+	if a.publisher != nil {
+		if !a.publisher.Status().Ready {
+			http.Error(w, "Publication is temporarily unavailable.", 503)
+			return
+		}
+		target, ok := a.publisher.CurrentURL(n)
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		http.Redirect(w, r, target, 301)
 		return
 	}
 	p, err := a.store.post(r.Context(), n, false)
@@ -476,4 +539,8 @@ func (a *App) legacy(mux *http.ServeMux) {
 	}
 	mux.HandleFunc("GET /posts/{id}", func(w http.ResponseWriter, r *http.Request) { a.redirectPost(w, r, r.PathValue("id")) })
 	// Legacy destructive GET endpoints intentionally have no aliases.
+}
+
+func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
+	a.render(w, r, 200, View{Page: "dashboard", Title: "Dashboard"})
 }

@@ -40,8 +40,18 @@ func openStore(dsn string) (*Store, error) {
 		return nil, err
 	}
 	db := sql.OpenDB(connector)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(5)
+	maxOpen, err := envInt("DB_MAX_OPEN_CONNS", 4, 2, 16)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	maxIdle, err := envInt("DB_MAX_IDLE_CONNS", 1, 0, maxOpen)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	db.SetMaxOpenConns(maxOpen)
+	db.SetMaxIdleConns(maxIdle)
 	db.SetConnMaxLifetime(3 * time.Minute)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -229,12 +239,19 @@ func (s *Store) post(ctx context.Context, id int64, admin bool) (Post, error) {
 	return scanPost(s.db.QueryRowContext(ctx, query, id))
 }
 func (s *Store) savePost(ctx context.Context, p Post) error {
+	_, err := s.savePostRecord(ctx, p)
+	return err
+}
+func (s *Store) savePostRecord(ctx context.Context, p Post) (int64, error) {
 	if p.ID == 0 {
-		_, err := s.db.ExecContext(ctx, "INSERT INTO news (title,body,status,tags,posted_by) VALUES (?,?,?,?,?)", p.Title, p.Body, p.Published, p.Tags, p.Author)
-		return err
+		result, err := s.db.ExecContext(ctx, "INSERT INTO news (title,body,status,tags,posted_by) VALUES (?,?,?,?,?)", p.Title, p.Body, p.Published, p.Tags, p.Author)
+		if err != nil {
+			return 0, err
+		}
+		return result.LastInsertId()
 	}
 	_, err := s.db.ExecContext(ctx, "UPDATE news SET title=?,body=?,status=?,tags=?,last_update=CURRENT_TIMESTAMP WHERE id=?", p.Title, p.Body, p.Published, p.Tags, p.ID)
-	return err
+	return p.ID, err
 }
 func (s *Store) guests(ctx context.Context, page int) ([]Guest, error) {
 	rows, err := s.db.QueryContext(ctx, "SELECT id,name,email,comment,country,date FROM guestbook ORDER BY id DESC LIMIT 21 OFFSET ?", (page-1)*20)
