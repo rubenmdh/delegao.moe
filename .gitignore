@@ -8,3 +8,4 @@
 /site.db
 /site.db-wal
 /site.db-shm
+__pycache__/

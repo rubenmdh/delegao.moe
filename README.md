@@ -117,6 +117,18 @@ the corresponding database backup because PHP expects the previous storage forma
 Existing PHP bcrypt (`$2y$`) passwords work; successful login upgrades low-cost
 hashes. Sessions are not imported, so sign in again after the switch.
 
+After a legacy MySQL import, review non-ASCII text before switching traffic.
+The importer uses `utf8mb4` and preserves the text returned by MySQL; a source
+column with incorrectly declared encoding can still return mojibake. SQLite
+supports Unicode, but does not infer how these strings were originally encoded.
+`python3 deploy/repair-encoding.py /path/site.db` previews reversible Latin-1 /
+Windows-1252 interpretations of UTF-8, including mixed correct and broken text.
+Review the suggestions: intentionally written encoding examples can be ambiguous.
+With the service stopped, `--apply` creates and checks an online SQLite backup,
+then repairs content fields in one transaction. It preserves IDs, dates, users,
+password hashes, HTML entities and comments added since the import. Restart Go
+afterwards to regenerate public HTML. See the migration guide for installation.
+
 ## Routes and editing
 
 The route names in `models.go` keep registration and link generation consistent.

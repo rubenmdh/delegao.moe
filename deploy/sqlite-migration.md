@@ -271,6 +271,53 @@ Para restaurar una copia verificada, detén Go, conserva el conjunto actual
 reconstruye antes de arrancar. No mezcles un `.db` restaurado con el WAL de otra
 base. Mantén un único proceso controlando el directorio de publicación.
 
+### Acentos o emojis con doble codificación
+
+Si aparecen secuencias como `RubÃ©n` o `â€™`, revisa los bytes y la codificación
+del origen antes de atribuirlo a SQLite. La conexión del importador usa
+`utf8mb4`, pero MySQL convierte el texto según el charset declarado de cada
+columna. Si ese charset no corresponde a los bytes que guardaba PHP, puede
+devolver texto ya mal interpretado. El importador conserva ese texto.
+
+Para una copia ya importada hay una herramienta de reparación. Desde el PC:
+
+```powershell
+scp ./deploy/repair-encoding.py root@IP_ORANGE_PI:/root/repair-encoding.py
+```
+
+Instálala y revisa su propuesta desde la Orange Pi:
+
+```sh
+install -d -o root -g root -m 0755 /usr/local/lib/delegao
+install -o root -g root -m 0755 /root/repair-encoding.py \
+  /usr/local/lib/delegao/repair-encoding.py
+runuser -u delegao -- sh -c 'set -a; . /etc/delegao.env; set +a; exec python3 /usr/local/lib/delegao/repair-encoding.py "$DATABASE_DSN"'
+```
+
+Sin `--apply` solo muestra ejemplos y recuentos. La herramienta reconoce
+secuencias UTF-8 reversibles interpretadas como Latin-1 o Windows-1252, también
+en campos donde parte del texto ya está bien. No usa sustitución de caracteres
+inválidos ni convierte el campo completo a una codificación antigua. Los
+ejemplos de mojibake escritos intencionadamente siguen siendo ambiguos: revisa
+la propuesta antes de aplicarla.
+
+Si los cambios propuestos corresponden al texto que quieres recuperar:
+
+```sh
+systemctl stop delegao
+runuser -u delegao -- sh -c 'set -a; . /etc/delegao.env; set +a; exec python3 /usr/local/lib/delegao/repair-encoding.py "$DATABASE_DSN" --apply'
+systemctl start delegao
+journalctl -u delegao -n 20 --no-pager
+```
+
+Antes de cambiar datos crea una copia consistente mediante la API online de
+SQLite y verifica `quick_check`. La ruta aparece en la salida; por defecto está
+en `encoding-backups/` junto a la base. Las actualizaciones se confirman en una
+sola transacción. Si falla una actualización, se revierten todas. Se conservan
+usuarios, hashes, IDs, fechas, estados y comentarios nuevos. No se decodifican
+entidades HTML ni se modifica MySQL. El arranque de Go regenera las páginas.
+No hace falta volver a importar la base ni sustituir el ejecutable para usarla.
+
 Para volver a la web PHP durante el cambio inicial, recupera su virtual host
 original y recarga nginx después de `nginx -t`. La importación no ha modificado
 el MySQL externo ni los archivos PHP. Si ya se ha utilizado Go en producción,
