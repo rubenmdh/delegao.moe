@@ -1,127 +1,129 @@
 # delegao.moe
 
-Personal website, microblog and guestbook, rewritten in Go. The original dark
-Bootstrap theme, animated background, avatar and page content are preserved.
+Personal website, microblog and guestbook in Go, with MySQL editing and static
+publication. The original public dark theme, animated background, avatar and
+content are preserved. The administration area has its own responsive layout.
 GPLv3; see [LICENSE](LICENSE).
+
+For **delegao.moe on an Orange Pi Zero with 512 MB RAM**, follow the Spanish
+[deployment guide](deploy/orange-pi.md). It includes ARM builds, MariaDB, systemd,
+nginx, TLS, backups and updates. Native deployment is recommended for this board.
 
 ## Run locally
 
-Requires Go 1.26 or later and MySQL 8 / MariaDB 10.11 or later. Go serves the
-website directly; PHP, Apache rewrite rules and Node.js are unnecessary.
-
-1. Create a UTF-8 database and a database user.
-2. Set the environment variables listed in `.env.example`. The application reads
-   the process environment; it does **not** automatically load `.env` files.
-3. Run `go run . migrate`, then `go run . create-admin YOUR_USERNAME`.
-   The latter prompts for a password without echoing it or putting it in the
-   command line. Passwords must be 12–72 bytes.
-4. Run `go run .` and open <http://127.0.0.1:8080>.
-
-PowerShell example (replace the database credentials):
+Requires Go 1.26+ and MySQL 8 / MariaDB 10.11+. Configure the process environment
+using `.env.example` as a reference; the application does **not** load `.env`
+files itself. PowerShell example:
 
 ```powershell
 $env:DATABASE_DSN = 'delegao:change-me@tcp(127.0.0.1:3306)/delegao'
+$env:PUBLIC_DIR = "$PWD/public"
 $env:COOKIE_SECURE = 'false' # Local HTTP only
+$env:BUILD_WORKERS = '2'
 go run . migrate
 go run . create-admin delegao
+go run . build
 go run .
 ```
 
-Build a standalone executable with `go build -trimpath -o delegao .` (use
-`delegao.exe` on Windows). Templates, images, fonts, styles and migrations are
-embedded in the executable. No working-directory files are served.
+Create the database first. `create-admin` prompts without echoing the password
+or putting it in the command line. Passwords must be 12–72 bytes. Visit
+<http://127.0.0.1:8080/login> to edit and publish content.
 
-## Migrating the PHP installation
+Build an executable with `go build -trimpath -o delegao .` (`delegao.exe` on
+Windows). Templates, images, fonts, styles and migrations are embedded in the
+binary. Published HTML is generated separately in `PUBLIC_DIR`, which must be
+writable by the runtime user. Do not put secrets or source files in that folder.
 
-1. Back up the existing database and stop writes from the PHP application.
-2. Point `DATABASE_DSN` at a **copy** of that database and run `delegao migrate`.
-3. Verify the content and login, then repeat the migration on the deployment
-   database and switch the reverse proxy to the Go server.
+## Hybrid publication
 
-Existing `news`, `guestbook` and `users` tables and IDs are preserved. The
-migration repairs missing auto-increment IDs and the tags default, adds an index
-for public posts, and decodes the HTML entities previously stored by PHP.
-The decoding runs once, transactionally, and does not change post timestamps.
-Migration versions are recorded in `schema_migrations`; repeated runs are safe.
-Schema changes use MySQL DDL and are not transactional. Run migrations as a
-separate deployment step before starting the server.
+MySQL is the editable source of truth for blog posts. Public informational pages, published
+posts, the homepage and paginated archive are generated before being served.
+The guestbook, login, previews and administration stay dynamic. Public reads
+use generated files rather than SQL or Markdown conversion on every visit.
+The original informational pages are embedded templates, not web-editable CMS
+entries; changes to those templates require recompilation and a rebuild.
 
-Existing PHP bcrypt (`$2y$`) passwords work. Successful logins upgrade hashes
-with a cost below 12. PHP sessions are not imported; sign in again.
-The PHP installer and database endpoints have been removed. For rollback,
-restore the backup and the `legacy` branch together, because PHP expects its
-previous text storage format.
+Publishing, updating, unpublishing and deleting content trigger a complete
+rebuild with a bounded worker pool. `BUILD_WORKERS` defaults to 2 and accepts
+1–4; start with 1 or 2 on small boards. This is one Go server process with
+worker goroutines, not several web-server instances.
 
-## Routes
+A build writes a new generation and changes the current manifest only when
+complete. Drafts and private data are excluded. Canonical URLs and pagination
+are switched together; removed entries and obsolete output disappear from the
+active generation. MySQL saves and publication are separate stages: if the
+save succeeds but generation fails, the panel reports it and public HTML is
+blocked with 503 until a successful rebuild, including across restarts. The
+administrator can repair the problem and rebuild without discarding the save.
 
-Routes and names are centralized in `models.go`; templates call `route` to
-generate links. `app.go` binds HTTP methods and authentication middleware using
-Go's standard `http.ServeMux` path parameters.
+Use the panel's rebuild action while running. For a command-line rebuild, stop
+the service before `delegao build`: only one process may control `PUBLIC_DIR`.
+The server attempts a fresh rebuild at startup. If generation fails, the
+dynamic repair panel stays available while public HTML returns 503. A database
+connection failure still prevents startup. The CLI `build` command returns a
+nonzero status if it cannot finish.
+Public HTML has ETags and mandatory revalidation; private forms and sessions
+use `Cache-Control: no-store`. Keep nginx proxying **all** routes through Go:
+serving generation directories directly would bypass canonical routes and
+failed-publication safeguards. Do not add a shared proxy cache for admin or
+CSRF forms. Back up MySQL, not only generated HTML.
 
-| Method | URL | Purpose |
-| --- | --- | --- |
-| GET | `/` | Latest published post |
-| GET | `/posts` | Paginated published posts |
-| GET | `/posts/{id}/{slug}` | Published post, e.g. `/posts/42/hello-world` |
-| GET | `/about-me`, `/projects`, `/music`, `/games`, `/contact`, `/keys`, `/donate` | Original pages |
-| GET, POST | `/guestbook` | Read / sign the guestbook |
-| GET, POST | `/login` | Sign in |
-| POST | `/logout` | Sign out |
-| GET | `/admin` | Dashboard |
-| GET, POST | `/admin/posts` | Manage / create posts |
-| GET | `/admin/posts/create` | New post form |
-| GET | `/admin/posts/{id}/edit` | Edit form |
-| POST | `/admin/posts/{id}` | Update a post |
-| POST | `/admin/posts/{id}/delete` | Delete a post |
-| GET | `/admin/guestbook` | Manage entries, including email addresses |
-| POST | `/admin/guestbook/{id}/delete` | Delete an entry |
+## Migration from PHP
 
-Old page URLs, `/news`, `/index.php?id=42`, `/index?id=42`, `/?id=42`
-and `/posts/42` redirect permanently to the new URLs. An old or incorrect post
-slug redirects to the current title; its ID remains stable. Drafts return 404
-publicly. Old destructive GET endpoints are deliberately unavailable.
+1. Back up the database and stop writes from the PHP application.
+2. Point `DATABASE_DSN` at a copy of that database, then run `delegao migrate`.
+3. Run `delegao build`, verify the content and login, then repeat with the
+   deployment database and switch the proxy to Go.
 
-## Security and deployment
+Existing `news`, `guestbook` and `users` IDs and PHP bcrypt (`$2y$`) passwords
+are preserved. The migration repairs missing auto-increment IDs and the tags
+default, adds the public-post index, and decodes PHP's stored HTML entities once
+without changing post timestamps. Migration versions are recorded in
+`schema_migrations`; repeated runs are safe. MySQL schema changes are not
+transactional. For rollback to PHP, restore the backup and the `legacy` branch
+together because PHP expects the previous text storage format.
 
-- Parameterized SQL; validated and bounded forms; escaped HTML templates.
-- Markdown uses Goldmark's safe defaults. Raw HTML and unsafe link schemes are
-  disabled. Excerpts are plain text rather than truncated HTML.
-- All writes, including login and logout, require a session-bound CSRF token.
-  Forms also check the Origin header when present. GET requests cannot delete.
-- Random opaque sessions, rotated on login and invalidated on logout, with
-  HttpOnly, SameSite=Lax cookies. `COOKIE_SECURE` defaults to `true`; use HTTPS
-  in production. Sessions expire after eight hours (anonymous forms: 30 minutes).
-- Rate limits for login (10 attempts / 15 minutes), guestbook submissions
-  (5 / 15 minutes) and new anonymous sessions (60 / 15 minutes), plus a guestbook
-  honeypot and the original dish question.
-- Guestbook emails are visible only to administrators.
-- CSP, anti-framing and MIME-sniffing headers; bounded requests and server
-  timeouts. Assets are served from an embedded allowlist; source code, database
-  configuration and the design experiments are not public files.
+## Routes and editing
 
-Set `ADDR` to a loopback address behind an HTTPS reverse proxy and preserve the
-public `Host` header. If using a container, set `ADDR=0.0.0.0:8080` and expose it
-only through your proxy. For a remote database, configure verified TLS in the
-MySQL DSN, for example `?tls=true`.
+The route names in `models.go` keep registration and link generation consistent.
+Public posts use `/posts/{id}/{slug}`. `/news`, old `.php` URLs and query-string
+post links redirect permanently; old slugs redirect to the current title.
+Drafts return 404 publicly. Destructive GET endpoints are unavailable.
 
-Forwarded IP headers are ignored by default. Set `TRUSTED_PROXIES` to the CIDR
-ranges of **your** proxies, e.g. `127.0.0.1/32,::1/128`; then the server walks
-`X-Forwarded-For` from the trusted proxy towards the client for rate limiting.
-The proxy must append or overwrite that header and forward the original Host.
-Keep `COOKIE_SECURE=true` when the proxy terminates HTTPS.
+- `/admin`: dashboard, editorial counts and publication status.
+- `/admin/posts`: posts, search/filter controls and creation/editing.
+- `/admin/posts/create`, `/admin/posts/{id}/edit`: Markdown editor and preview.
+- `/admin/guestbook`: dynamic entry management; emails are admin-only.
+- `/guestbook`: public reading and signing; `/login` and POST `/logout` manage sessions.
 
-Sessions and rate limits live in bounded process memory. Restarting the process
-signs everyone out. Run one instance; multiple instances require shared session
-and rate-limit storage. The dish question remains a lightweight spam deterrent.
-If `GUESTBOOK_ANSWER` changes, update the answer in the About me template too.
+## Configuration and security
 
-The Dockerfile builds a static binary and runs it as an unprivileged user:
+`ADDR` defaults to loopback `127.0.0.1:8080`. Use HTTPS and
+`COOKIE_SECURE=true` in production. Set `TRUSTED_PROXIES` only to your own proxy
+CIDRs. The included nginx configuration overwrites forwarded IPs, preserves
+Host and keeps the Go port private. For a remote database configure verified
+TLS in the DSN, e.g. `?tls=true`; the board guide uses a local Unix socket.
 
-```sh
-docker build -t delegao .
-docker run --rm --read-only -p 127.0.0.1:8080:8080 \
-  --env-file .env -e ADDR=0.0.0.0:8080 delegao
-```
+`DB_MAX_OPEN_CONNS=4` and `DB_MAX_IDLE_CONNS=1` bound the application pool.
+The open-connection setting accepts 2–16; migrations need a connection in
+addition to the one that holds their database lock.
+`GOMEMLIMIT=64MiB` is a Go runtime target, not a hard total-memory limit.
+The deployment guide provides a cautious starting profile for 512 MB systems;
+measure the complete machine under your workload before increasing concurrency.
+
+SQL is parameterized; templates escape output. Markdown omits raw HTML and
+unsafe URL schemes. All writes require session-bound CSRF protection, including
+preview, publishing and logout. The server also checks Origin when present,
+sets defensive headers, bounds forms, and applies request timeouts.
+
+Sessions use random opaque IDs, rotate on login, expire after eight hours
+(anonymous forms: 30 minutes), and use HttpOnly / SameSite=Lax cookies.
+Login attempts, guestbook submissions and anonymous-session creation are
+rate-limited. Restarting signs users out: sessions and rate limits are in
+bounded process memory, so run a **single server instance**. The guestbook
+retains its honeypot and dish question. If `GUESTBOOK_ANSWER` changes, update
+the About me content to match.
 
 ## Verification
 
@@ -130,24 +132,37 @@ go test ./...
 go vet ./...
 ```
 
-For real database integration tests, set `TEST_DATABASE_DSN` to a MySQL/MariaDB
-account allowed to create databases, then run `go test -count=1 ./...`.
-Tests create and drop uniquely named `delegao_test_*` databases; they do not
-modify the database named in the DSN. These tests cover the legacy schema,
-idempotent migrations, PHP bcrypt login, draft isolation, CRUD, canonical
-redirects, guestbook privacy, XSS, CSRF and pagination. CI runs them with MariaDB.
+Set `TEST_DATABASE_DSN` to a MySQL/MariaDB account allowed to create databases
+and run `go test -count=1 ./...` for real database integration tests. Each run
+creates and drops its own `delegao_test_*` database; it does not modify the
+database named in that DSN. CI runs integration tests, the race detector and
+ARMv7/ARM64 cross-compilation.
 
-## Layout and dependencies
+## Optional container
 
-- `main.go`: configuration, CLI commands and server lifecycle.
-- `app.go`, `models.go`: handlers, named routes, models and safe rendering.
-- `security.go`, `proxy.go`: sessions, CSRF, rate limits and trusted proxies.
-- `store.go`, `migrations/`: SQL persistence and migration from PHP.
-- `web/templates/`: shared layouts and the original page content.
-- `web/static/`: original visual assets and a small native JavaScript file.
+The Orange Pi guide uses systemd instead. On larger hosts the Dockerfile runs
+a static executable as an unprivileged user. Keep `/state` on a writable volume
+and pass a DSN reachable from the container (not host loopback):
 
-Only Bootstrap 4's CSS and Font Awesome's CSS/fonts remain from the original
-frontend libraries. jQuery, Bootstrap JS, Popper, duplicate CSS builds, Parsedown,
-the PHP installer and all PHP runtime files are removed. Go dependencies are
-pinned in `go.mod` / `go.sum`: the MySQL driver, Goldmark, and Go's crypto, text
-and terminal packages.
+```sh
+docker build -t delegao .
+docker run --rm --read-only --mount type=volume,src=delegao-state,dst=/state \
+  --env-file .env -e PUBLIC_DIR=/state/public -e ADDR=0.0.0.0:8080 \
+  -p 127.0.0.1:8080:8080 delegao
+```
+
+Run the migration and initial build with the same environment and volume before
+starting the service. HTTPS still belongs at the reverse proxy.
+
+## Source layout
+
+`app.go` and `admin.go` contain handlers; `models.go` names routes; `store.go`
+contains persistence; the publisher files build and serve generated HTML.
+`security.go` and `proxy.go` implement sessions, CSRF and trusted proxies.
+`web/templates/` contains shared layouts, and `web/static/` contains the original
+visual assets plus small native scripts. The PHP runtime, installer, Parsedown,
+jQuery, Bootstrap JS, Popper and duplicate CSS builds have been removed.
+
+Dependencies are pinned in `go.mod` / `go.sum`. Only Bootstrap 4 CSS and Font
+Awesome CSS/fonts remain from the original frontend libraries. No source files
+or untracked design experiments are served by the application.

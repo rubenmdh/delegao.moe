@@ -1,0 +1,21 @@
+# Starting profile for a small InnoDB database sharing a 512 MiB board.
+# Install as /etc/mysql/mariadb.conf.d/60-delegao-small.cnf.
+# These settings bound caches, not the server's total RSS. Measure on the board.
+[mysqld]
+skip-networking
+innodb_buffer_pool_size=64M
+key_buffer_size=4M
+aria_pagecache_buffer_size=8M
+max_connections=12
+table_open_cache=128
+table_definition_cache=400
+thread_cache_size=2
+tmp_table_size=4M
+max_heap_table_size=4M
+sort_buffer_size=256K
+join_buffer_size=256K
+read_buffer_size=128K
+read_rnd_buffer_size=256K
+performance_schema=OFF
+# Preserve crash durability; do not trade committed posts for SD-card speed.
+innodb_flush_log_at_trx_commit=1

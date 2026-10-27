@@ -28,3 +28,8 @@ jobs:
           TEST_DATABASE_DSN: root:integration-only@tcp(127.0.0.1:3306)/
       - run: go vet ./...
       - run: go build -trimpath ./...
+      - name: Cross-compile Orange Pi targets
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags='-s -w' -o dist/delegao-linux-armv7 .
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags='-s -w' -o dist/delegao-linux-arm64 .

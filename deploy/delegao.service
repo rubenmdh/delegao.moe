@@ -1,0 +1,43 @@
+[Unit]
+Description=delegao.moe hybrid publisher and dynamic backend
+After=network.target mariadb.service
+Wants=mariadb.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=delegao
+Group=delegao
+EnvironmentFile=/etc/delegao.env
+WorkingDirectory=/var/lib/delegao
+StateDirectory=delegao
+StateDirectoryMode=0750
+UMask=0027
+ExecStart=/usr/local/bin/delegao
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=150
+MemoryAccounting=true
+MemoryHigh=96M
+MemoryMax=160M
+TasksMax=64
+LimitNOFILE=1024
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
