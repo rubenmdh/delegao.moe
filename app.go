@@ -36,7 +36,10 @@ type App struct {
 	dummyHash []byte
 }
 type View struct {
-	Notice                                 string
+	Dashboard                              AdminDashboard
+	Publication                            AdminPublication
+	Query, Filter, Notice                  string
+	PreviousURL, NextURL                   string
 	Title, Page, CSRF, User, Error, Action string
 	Posts                                  []Post
 	Post                                   Post
@@ -91,8 +94,9 @@ func (a *App) handler() http.Handler {
 	bind("GET", "login", a.loginForm)
 	bind("POST", "login", a.login)
 	bind("POST", "logout", a.logout)
-	bind("GET", "admin", a.auth(a.dashboard))
-	bind("GET", "admin.posts", a.auth(a.postList))
+	bind("GET", "admin", a.auth(a.adminDashboard))
+	bind("GET", "admin.posts", a.auth(a.adminPosts))
+	bind("POST", "admin.preview", a.auth(a.adminPreview))
 	bind("POST", "admin.rebuild", a.auth(a.rebuildPublic))
 	bind("GET", "admin.posts.create", a.auth(a.postForm))
 	bind("POST", "admin.posts", a.auth(a.savePost))
@@ -151,6 +155,10 @@ func (a *App) auth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 func (a *App) render(w http.ResponseWriter, r *http.Request, status int, v View) {
+	if a.publisher != nil {
+		p := a.publisher.Status()
+		v.Publication = AdminPublication{Ready: p.Ready, Building: p.Building, BuiltAt: p.BuiltAt, Pages: p.Pages, Workers: p.Workers, Error: p.Error}
+	}
 	if v.Notice == "" {
 		v.Notice = map[string]string{"saved": "Post saved and publication updated.", "deleted": "Post deleted and publication updated.", "rebuilt": "Public pages rebuilt successfully.", "guest-deleted": "Guestbook entry deleted."}[r.URL.Query().Get("notice")]
 	}
@@ -539,8 +547,4 @@ func (a *App) legacy(mux *http.ServeMux) {
 	}
 	mux.HandleFunc("GET /posts/{id}", func(w http.ResponseWriter, r *http.Request) { a.redirectPost(w, r, r.PathValue("id")) })
 	// Legacy destructive GET endpoints intentionally have no aliases.
-}
-
-func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
-	a.render(w, r, 200, View{Page: "dashboard", Title: "Dashboard"})
 }

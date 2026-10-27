@@ -1,23 +1,29 @@
 {{define "layout"}}<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{.Title}}{{if ne .Title "Delegao.moe"}} - Delegao.moe{{end}}</title>
-<link rel="stylesheet" href="/css/bootstrap.min.css"><link rel="stylesheet" href="/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><script src="/js/site.js" defer></script></head>
-<body><div id="background"></div><div id="background-cover"></div>
-{{if .Admin}}{{template "admin-nav" .}}{{end}}
-<main class="container text-white site-content {{if .Admin}}admin-content{{end}}">
+<link rel="stylesheet" href="/css/bootstrap.min.css"><link rel="stylesheet" href="/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><script src="/js/site.js" defer></script>
+{{if or .Admin (eq .Page "login")}}<link rel="stylesheet" href="/css/admin.css"><script src="/js/admin.js" defer></script>{{end}}</head>
+<body class="{{if or .Admin (eq .Page "login")}}admin-shell{{end}}"><div id="background"></div><div id="background-cover"></div>
+{{if .Admin}}
+{{template "admin-nav" .}}
+<main id="main-content" class="container admin-main text-white"><div class="admin-workspace">{{template "content" .}}</div><footer class="admin-footer"><span>delegao.moe / area 51</span><a href="/" target="_blank" rel="noopener noreferrer">Open website <span aria-hidden="true">↗</span></a></footer></main>
+{{else if eq .Page "login"}}<main class="container admin-login">{{template "content" .}}</main>
+{{else}}
+<main class="container text-white site-content">
 {{if .Wide}}
  <div class="card"><div class="card-body">{{template "content" .}}</div></div>
- {{if not .Admin}}<div class="card mt-4 p-3"><a href="/">&lt; Go back</a><span class="h4 font-weight-light mt-2"><b>delegao</b>.moe</span></div>{{end}}
+ <div class="card mt-4 p-3"><a href="/">&lt; Go back</a><span class="h4 font-weight-light mt-2"><b>delegao</b>.moe</span></div>
 {{else}}<div class="row"><aside id="memo" class="col-12 col-lg-4 order-lg-2 mb-5">{{template "sidebar" .}}</aside><section id="blog" class="col-12 col-lg-8 order-lg-1 mb-5">{{template "content" .}}</section></div>{{end}}
-</main></body></html>{{end}}
+</main>{{end}}</body></html>{{end}}
 
 {{define "content"}}
 {{if .Error}}<div class="alert alert-danger" role="alert">{{.Error}}</div>{{end}}
+{{if .Notice}}<div class="admin-notice" role="status"><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{.Notice}}</span></div>{{end}}
 {{if eq .Page "posts"}}{{template "posts" .}}
 {{else if eq .Page "guestbook"}}{{template "guestbook" .}}
 {{else if eq .Page "login"}}{{template "login" .}}
 {{else if eq .Page "editor"}}{{template "editor" .}}
-{{else if eq .Page "dashboard"}}<h1 class="h3">Welcome, {{.User}}</h1><p>Manage your posts and guestbook from the navigation above.</p><a href="/" class="btn btn-primary">Visit website</a>
+{{else if eq .Page "dashboard"}}{{template "dashboard" .}}
 {{else}}{{if not .Wide}}<div class="card"><div class="card-body">{{end}}
 {{if eq .Page "about-me"}}{{template "page-about-me" .}}
 {{else if eq .Page "projects"}}{{template "page-projects" .}}
@@ -29,12 +35,13 @@
 {{if not .Wide}}</div></div>{{end}}{{end}}
 {{end}}
 
-{{define "pagination"}}<nav aria-label="Pagination" class="mt-4">
-{{if .Previous}}<a class="btn btn-secondary" href="?page={{.Previous}}">&lt; Previous</a>{{end}}
-{{if .Next}}<a class="btn btn-primary" href="?page={{.Next}}">Next &gt;</a>{{end}}</nav>{{end}}
+{{define "pagination"}}{{if or .Previous .Next}}<nav aria-label="Pagination" class="admin-pagination mt-4">
+{{if .Previous}}<a class="btn btn-secondary" href="{{if .PreviousURL}}{{.PreviousURL}}{{else}}?page={{.Previous}}{{end}}">&lt; Previous</a>{{end}}
+<span>Page {{.PageNumber}}</span>
+{{if .Next}}<a class="btn btn-primary" href="{{if .NextURL}}{{.NextURL}}{{else}}?page={{.Next}}{{end}}">Next &gt;</a>{{end}}</nav>{{end}}{{end}}
 
-{{define "admin-nav"}}<nav class="container"><div class="navbar navbar-dark card mt-3 admin-nav">
-<a class="navbar-brand" href="{{route "admin"}}">delegao.moe area 51</a><div class="d-flex flex-wrap align-items-center">
-<a class="nav-link" href="{{route "admin.posts"}}">News</a><a class="nav-link" href="{{route "admin.guests"}}">Guestbook</a><span class="mr-3">Logged in as {{.User}}</span>
-<form action="{{route "logout"}}" method="post"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="btn btn-outline-light btn-sm">Logout</button></form>
-</div></div></nav>{{end}}
+{{define "admin-nav"}}<a class="admin-skip" href="#main-content">Skip to content</a><header class="admin-header"><nav class="container admin-navigation" aria-label="Administration">
+<a class="admin-brand" href="{{route "admin"}}"><span class="admin-brand-mark" aria-hidden="true">d.</span><span>delegao<span class="admin-brand-light">.moe</span><small>AREA 51</small></span></a>
+<div class="admin-nav-links"><a href="{{route "admin"}}" {{if eq .Page "dashboard"}}aria-current="page"{{end}}><i class="fas fa-th-large" aria-hidden="true"></i> Overview</a><a href="{{route "admin.posts"}}" {{if or (eq .Page "posts") (eq .Page "editor")}}aria-current="page"{{end}}><i class="fas fa-pen" aria-hidden="true"></i> Posts</a><a href="{{route "admin.guests"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}><i class="fas fa-address-book" aria-hidden="true"></i> Guestbook</a></div>
+<div class="admin-account"><span class="admin-user"><i class="fas fa-user-circle" aria-hidden="true"></i> {{.User}}</span><form action="{{route "logout"}}" method="post"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="admin-logout" title="Sign out"><i class="fas fa-sign-out-alt" aria-hidden="true"></i><span> Sign out</span></button></form></div>
+</nav></header>{{end}}
