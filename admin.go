@@ -79,8 +79,8 @@ func adminPostQuery(query, filter string, page int) (string, []any) {
 	statement := "SELECT id,title,'',status,tags,posted_by,created_at,last_update FROM news WHERE 1=1"
 	var args []any
 	if query != "" {
-		// LOCATE searches literal text; '%' and '_' are not wildcard operators.
-		statement += " AND (LOCATE(?,title)>0 OR LOCATE(?,tags)>0)"
+		// INSTR searches literal text; '%' and '_' are not wildcard operators.
+		statement += " AND (INSTR(LOWER(title),LOWER(?))>0 OR INSTR(LOWER(tags),LOWER(?))>0)"
 		args = append(args, query, query)
 	}
 	switch filter {
@@ -98,6 +98,9 @@ func (a *App) adminPosts(w http.ResponseWriter, r *http.Request) {
 	query, filter := adminFilters(r)
 	number := page(r)
 	statement, args := adminPostQuery(query, filter, number)
+	if a.store.dialect == "sqlite" {
+		statement = strings.ReplaceAll(statement, "LOWER(", "unicode_fold(")
+	}
 	rows, err := a.store.db.QueryContext(r.Context(), statement, args...)
 	if err != nil {
 		a.fail(w, err)

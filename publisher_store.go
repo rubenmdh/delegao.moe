@@ -8,7 +8,11 @@ import (
 // publicationPosts streams one consistent view of published posts. The consumer
 // controls backpressure, so a generation never retains every Markdown body.
 func (s *Store) publicationPosts(ctx context.Context, consume func(Post) error) error {
-	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	opts := &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true}
+	if s.dialect == "sqlite" {
+		opts = &sql.TxOptions{ReadOnly: true}
+	}
+	tx, err := s.db.BeginTx(ctx, opts)
 	if err != nil {
 		return err
 	}

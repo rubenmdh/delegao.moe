@@ -40,7 +40,7 @@ type publicationManifest struct {
 	PostURLs map[string]string          `json:"posts"`
 }
 
-// Publisher keeps MySQL as the editable source and serves immutable HTML files.
+// Publisher keeps the database as the editable source and serves immutable HTML files.
 // Its mutation lock must wrap every post write, including unpublishing/deleting.
 type Publisher struct {
 	app       *App
@@ -121,7 +121,7 @@ func (p *Publisher) CurrentURL(id int64) (string, bool) {
 }
 
 // Block is used when startup cannot reconcile the cached generation with
-// MySQL. The dynamic repair/admin paths can still run, but public HTML cannot
+// the database. The dynamic repair/admin paths can still run, but public HTML cannot
 // be served merely because an older generation was present on disk.
 func (p *Publisher) Block(cause error) {
 	p.buildMu.Lock()
@@ -164,7 +164,7 @@ func (p *Publisher) Mutate(ctx context.Context, mutate func(context.Context) err
 		return err
 	}
 	if err := p.rebuild(ctx); err != nil {
-		return fmt.Errorf("saved in MySQL, but publication failed: %w", err)
+		return fmt.Errorf("saved in the database, but publication failed: %w", err)
 	}
 	return nil
 }

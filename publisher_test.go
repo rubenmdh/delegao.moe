@@ -172,7 +172,7 @@ func TestPublisherFailureIsAtomicAndMutationFailsClosed(t *testing.T) {
 	if !p.Status().Ready || p.active.Name != previous || readPublished(p, "GET", "/", nil).Code != 200 {
 		t.Fatal("clean generation was replaced by an incomplete rebuild")
 	}
-	if err := p.Mutate(context.Background(), func(context.Context) error { posts[0].Published = false; return nil }); err == nil || !strings.Contains(err.Error(), "saved in MySQL") {
+	if err := p.Mutate(context.Background(), func(context.Context) error { posts[0].Published = false; return nil }); err == nil || !strings.Contains(err.Error(), "saved in the database") {
 		t.Fatalf("missing actionable publication failure: %v", err)
 	}
 	if p.Status().Ready || p.Status().Error == "" || p.Status().Building {

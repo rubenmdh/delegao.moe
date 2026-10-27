@@ -247,7 +247,10 @@ func TestIntegrationLegacyMigration(t *testing.T) {
 }
 
 func TestIntegrationHTTPFlows(t *testing.T) {
-	store := integrationStore(t)
+	testHTTPFlows(t, integrationStore(t))
+}
+
+func testHTTPFlows(t *testing.T, store *Store) {
 	ctx := context.Background()
 	if err := store.migrate(ctx); err != nil {
 		t.Fatal(err)

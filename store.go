@@ -15,13 +15,21 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-type Store struct{ db *sql.DB }
+type Store struct {
+	db      *sql.DB
+	dialect string
+}
 
 func openStore(dsn string) (*Store, error) {
 	cfg, err := mysql.ParseDSN(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("invalid database configuration")
 	}
+	return openMySQLConfig(cfg)
+}
+
+func openMySQLConfig(cfg *mysql.Config) (*Store, error) {
+	cfg = cfg.Clone()
 	cfg.ParseTime = true
 	cfg.Loc = time.UTC
 	cfg.Timeout = 5 * time.Second
@@ -59,10 +67,13 @@ func openStore(dsn string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("database connection failed: %w", err)
 	}
-	return &Store{db}, nil
+	return &Store{db: db, dialect: "mysql"}, nil
 }
 
 func (s *Store) migrate(ctx context.Context) error {
+	if s.dialect == "sqlite" {
+		return s.migrateSQLite(ctx)
+	}
 	conn, err := s.db.Conn(ctx)
 	if err != nil {
 		return err
@@ -198,13 +209,18 @@ type scanner interface{ Scan(...any) error }
 func scanPost(row scanner) (Post, error) {
 	var p Post
 	var status int
-	err := row.Scan(&p.ID, &p.Title, &p.Body, &status, &p.Tags, &p.Author, &p.Created, &p.Updated)
+	var created, updated databaseTime
+	err := row.Scan(&p.ID, &p.Title, &p.Body, &status, &p.Tags, &p.Author, &created, &updated)
+	p.Created = created.Time
+	if updated.Valid {
+		p.Updated = &updated.Time
+	}
 	p.Published = status == 1
 	return p, err
 }
 func (s *Store) posts(ctx context.Context, admin bool, page int) ([]Post, error) {
 	// Lists need only an excerpt; the admin table does not need the body at all.
-	body := "LEFT(body,250)"
+	body := "SUBSTR(body,1,250)"
 	if admin {
 		body = "''"
 	}
@@ -262,9 +278,11 @@ func (s *Store) guests(ctx context.Context, page int) ([]Guest, error) {
 	var result []Guest
 	for rows.Next() {
 		var g Guest
-		if err := rows.Scan(&g.ID, &g.Name, &g.Email, &g.Comment, &g.Country, &g.Date); err != nil {
+		var date databaseTime
+		if err := rows.Scan(&g.ID, &g.Name, &g.Email, &g.Comment, &g.Country, &date); err != nil {
 			return nil, err
 		}
+		g.Date = date.Time
 		result = append(result, g)
 	}
 	return result, rows.Err()

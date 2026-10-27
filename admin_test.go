@@ -61,7 +61,10 @@ func TestAdminPreviewRequiresSessionAndCSRF(t *testing.T) {
 }
 
 func TestIntegrationAdminDashboardAndFilters(t *testing.T) {
-	store := integrationStore(t)
+	testAdminDashboardAndFilters(t, integrationStore(t))
+}
+
+func testAdminDashboardAndFilters(t *testing.T, store *Store) {
 	ctx := context.Background()
 	if err := store.migrate(ctx); err != nil {
 		t.Fatal(err)

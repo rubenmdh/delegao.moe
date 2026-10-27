@@ -11,7 +11,10 @@ import (
 )
 
 func TestIntegrationMixedPublicationHTTP(t *testing.T) {
-	store := integrationStore(t)
+	testMixedPublicationHTTP(t, integrationStore(t))
+}
+
+func testMixedPublicationHTTP(t *testing.T, store *Store) {
 	ctx := context.Background()
 	if err := store.migrate(ctx); err != nil {
 		t.Fatal(err)

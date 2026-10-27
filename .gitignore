@@ -5,3 +5,6 @@
 /coverage.out
 /public/
 /dist/
+/site.db
+/site.db-wal
+/site.db-shm

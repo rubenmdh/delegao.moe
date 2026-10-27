@@ -446,7 +446,7 @@ func (a *App) savePost(w http.ResponseWriter, r *http.Request) {
 		return err
 	}); err != nil {
 		slog.Error("save/publication failed", "error", err)
-		a.renderPostForm(w, r, 503, p, "The operation did not complete. Check the saved post in administration before trying again. If it is saved in MySQL, rebuild the public pages from the dashboard; public pages stay unavailable until publication succeeds.")
+		a.renderPostForm(w, r, 503, p, "The operation did not complete. Check the saved post in administration before trying again. If it is saved in the database, rebuild the public pages from the dashboard; public pages stay unavailable until publication succeeds.")
 		return
 	}
 	http.Redirect(w, r, route("admin.posts")+"?notice=saved", 303)

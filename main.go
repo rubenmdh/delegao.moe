@@ -27,11 +27,16 @@ func run() error {
 	if dsn == "" {
 		return errors.New("DATABASE_DSN is required")
 	}
-	store, err := openStore(dsn)
+	store, err := openConfiguredStore(os.Getenv("DATABASE_DRIVER"), dsn)
 	if err != nil {
 		return err
 	}
 	defer store.db.Close()
+	if len(os.Args) > 1 && os.Args[1] == "import-mysql" {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+		return runMySQLImport(ctx, store, os.Args[2:])
+	}
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
 		return store.migrate(context.Background())
 	}
@@ -63,7 +68,7 @@ func run() error {
 			_, err = store.db.Exec("INSERT INTO users (username,password) VALUES (?,?)", os.Args[2], string(hash))
 			return err
 		default:
-			return errors.New("unknown command; use migrate, build or create-admin USERNAME")
+			return errors.New("unknown command; use migrate, import-mysql HOST DATABASE USERNAME, build or create-admin USERNAME")
 		}
 	}
 	secure := os.Getenv("COOKIE_SECURE") != "false"
