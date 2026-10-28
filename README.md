@@ -145,6 +145,8 @@ Drafts return 404 publicly. Destructive GET endpoints are unavailable.
 - `/admin/posts`: search, status filters and creation/editing.
 - `/admin/posts/create`, `/admin/posts/{id}/edit`: Markdown editor and preview.
 - `/admin/guestbook`: dynamic entry management; emails are admin-only.
+- `/admin/password`: change the signed-in account's password using its current
+  password and confirmation of the new one; all its sessions are revoked.
 - `/guestbook`: public reading/signing; `/login` and POST `/logout` manage sessions.
 - `/services`: generated directory using the shared list in `public_services.go`.
 
@@ -165,7 +167,8 @@ are recorded on each guestbook render. Static pages, administration and login
 omit these metrics. This adds no polling, JavaScript or external requests.
 
 Rendering durations use two decimal places and adapt between µs, ms and s. The
-guestbook displays the actual Go runtime version linked to the Go GC article.
+guestbook displays the actual Go runtime version and OS/architecture (including
+the ARM generation where available), linked to the Go GC article.
 
 Public footers also show a small IPv6 connection indicator using the official
 IPv6-only image endpoint from [ipv6.sx](https://ipv6.sx/embed). A bundled script
@@ -206,6 +209,22 @@ guestbook and anonymous-session creation are rate-limited. Sessions and limits
 live in bounded process memory: restarting signs users out. Run a single instance.
 The guestbook retains its honeypot and dish question; update About me if changing
 `GUESTBOOK_ANSWER`.
+
+Login accepts up to 10 attempts per IP in a fixed 15-minute window, returning
+HTTP 429 with `Retry-After` afterwards. There is no account-wide login lockout:
+attempts from one IP do not lock the account for other addresses. Client IPs
+come from the validated `TRUSTED_PROXIES` chain; nginx must overwrite forwarded
+headers rather than trusting values supplied by the visitor. Unknown users use
+a dummy bcrypt check and the same generic failure message as bad passwords.
+
+Password changes require a session, CSRF, the current password and matching new
+passwords of at least 15 characters, within bcrypt's 72-byte UTF-8 limit. New
+hashes use bcrypt cost 12. Changes are limited to five attempts per IP and per
+authenticated account in 15 minutes. Updates use a conditional SQL write and
+revoke every session of that account, requiring a fresh login. Final login
+issuance rechecks the stored hash under the same lock as credential changes,
+preventing an in-flight login with an old password from restoring a session.
+No schema migration is needed; SQLite and MySQL use the existing password column.
 
 ## Backups and verification
 

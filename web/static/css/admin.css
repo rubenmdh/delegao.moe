@@ -4,3 +4,4 @@
 .admin-post-title { min-width: 14rem; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: .35rem; }
 .admin-actions form { margin: 0; }
+.admin-password { max-width: 32rem; }

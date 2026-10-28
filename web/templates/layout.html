@@ -25,6 +25,7 @@
 {{else if eq .Page "login"}}{{template "login" .}}
 {{else if eq .Page "editor"}}{{template "editor" .}}
 {{else if eq .Page "dashboard"}}{{template "dashboard" .}}
+{{else if eq .Page "password"}}{{template "password" .}}
 {{else}}<section class="public-page">
 {{if eq .Page "about-me"}}{{template "page-about-me" .}}
 {{else if eq .Page "projects"}}{{template "page-projects" .}}
@@ -54,6 +55,7 @@
 <li class="nav-item {{if eq .Page "dashboard"}}active{{end}}"><a class="nav-link px-2" href="{{route "admin"}}" {{if eq .Page "dashboard"}}aria-current="page"{{end}}>Home</a></li>
 <li class="nav-item {{if or (eq .Page "posts") (eq .Page "editor")}}active{{end}}"><a class="nav-link px-2" href="{{route "admin.posts"}}" {{if or (eq .Page "posts") (eq .Page "editor")}}aria-current="page"{{end}}>News</a></li>
 <li class="nav-item {{if eq .Page "guestbook"}}active{{end}}"><a class="nav-link px-2" href="{{route "admin.guests"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}>Guestbook</a></li>
+<li class="nav-item {{if eq .Page "password"}}active{{end}}"><a class="nav-link px-2" href="{{route "admin.password"}}" {{if eq .Page "password"}}aria-current="page"{{end}}>Password</a></li>
 </ul>
 <div class="navbar-text ml-lg-auto">Logged in as {{.User}} &ndash; <form class="d-inline" action="{{route "logout"}}" method="post"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="btn btn-link btn-sm p-0 text-white">Logout</button></form> &ndash; <a href="/">Visit website</a></div>
 </nav></div>{{end}}

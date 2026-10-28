@@ -90,6 +90,16 @@ func (s *security) logout(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &http.Cookie{Name: "delegao_session", Path: "/", MaxAge: -1, HttpOnly: true, Secure: s.secure, SameSite: http.SameSiteLaxMode})
 }
+
+func (s *security) revokeUser(user string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for id, sess := range s.sessions {
+		if sess.User == user {
+			delete(s.sessions, id)
+		}
+	}
+}
 func (s *security) csrf(w http.ResponseWriter, r *http.Request) bool {
 	sess, ok := s.current(r)
 	// Check Origin when sent, in addition to an unpredictable session-bound token.
@@ -115,7 +125,10 @@ func (s *security) allow(r *http.Request, scope string, limit int) bool {
 	if err != nil {
 		ip = r.RemoteAddr
 	}
-	key := scope + ":" + ip
+	return s.allowKey(scope+":"+ip, limit)
+}
+
+func (s *security) allowKey(key string, limit int) bool {
 	now := time.Now()
 	s.mu.Lock()
 	defer s.mu.Unlock()

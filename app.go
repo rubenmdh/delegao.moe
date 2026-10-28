@@ -15,6 +15,7 @@ import (
 	"net/netip"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -27,14 +28,17 @@ import (
 var web embed.FS
 
 type App struct {
-	publisher *Publisher
-	proxies   []netip.Prefix
-	store     *Store
-	security  *security
-	templates *template.Template
-	markdown  goldmark.Markdown
-	answer    string
-	dummyHash []byte
+	// Serialize the final credential check/session issue with password updates
+	// and revocation, so an in-flight login cannot revive an old password.
+	credentialsMu sync.Mutex
+	publisher     *Publisher
+	proxies       []netip.Prefix
+	store         *Store
+	security      *security
+	templates     *template.Template
+	markdown      goldmark.Markdown
+	answer        string
+	dummyHash     []byte
 }
 type View struct {
 	Rendering                              *PageRendering
@@ -106,6 +110,8 @@ func (a *App) handler() http.Handler {
 	bind("POST", "login", a.login)
 	bind("POST", "logout", a.logout)
 	bind("GET", "admin", a.auth(a.adminDashboard))
+	bind("GET", "admin.password", a.auth(a.passwordForm))
+	bind("POST", "admin.password", a.auth(a.changePassword))
 	bind("GET", "admin.posts", a.auth(a.adminPosts))
 	bind("POST", "admin.preview", a.auth(a.adminPreview))
 	bind("POST", "admin.rebuild", a.auth(a.rebuildPublic))
@@ -171,7 +177,7 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, status int, v View)
 		v.Publication = AdminPublication{Ready: p.Ready, Building: p.Building, BuiltAt: p.BuiltAt, Pages: p.Pages, Workers: p.Workers, Error: p.Error}
 	}
 	if v.Notice == "" {
-		v.Notice = map[string]string{"saved": "Post saved and publication updated.", "deleted": "Post deleted and publication updated.", "rebuilt": "Public pages rebuilt successfully.", "guest-deleted": "Guestbook entry deleted."}[r.URL.Query().Get("notice")]
+		v.Notice = map[string]string{"saved": "Post saved and publication updated.", "deleted": "Post deleted and publication updated.", "rebuilt": "Public pages rebuilt successfully.", "guest-deleted": "Guestbook entry deleted.", "password-changed": "Password changed. Please sign in again."}[r.URL.Query().Get("notice")]
 	}
 	v.Admin = strings.HasPrefix(r.URL.Path, "/admin")
 	v.Wide = v.Wide || v.Admin || v.Page == "login" || v.Page == "guestbook"
@@ -368,14 +374,37 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 		a.render(w, r, 401, View{Page: "login", Title: "Log in", Error: "Invalid username or password."})
 		return
 	}
+	var upgraded []byte
 	if cost, err := bcrypt.Cost(hash); err == nil && cost < 12 {
-		upgraded, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+		upgraded, err = bcrypt.GenerateFromPassword([]byte(password), 12)
 		if err != nil {
 			a.fail(w, err)
 			return
 		}
-		if _, err := a.store.db.ExecContext(r.Context(), "UPDATE users SET password=? WHERE id=? AND password=?", string(upgraded), u.ID, u.Password); err != nil {
+	}
+	a.finishLogin(w, r, u, upgraded)
+}
+
+func (a *App) finishLogin(w http.ResponseWriter, r *http.Request, u User, upgraded []byte) {
+	a.credentialsMu.Lock()
+	defer a.credentialsMu.Unlock()
+	latest, err := a.store.user(r.Context(), u.Username)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		a.fail(w, err)
+		return
+	}
+	if err != nil || latest.Password != u.Password {
+		a.render(w, r, 401, View{Page: "login", Title: "Log in", Error: "Invalid username or password."})
+		return
+	}
+	if upgraded != nil {
+		changed, err := a.store.replacePassword(r.Context(), u, string(upgraded))
+		if err != nil {
 			a.fail(w, err)
+			return
+		}
+		if !changed {
+			a.render(w, r, 401, View{Page: "login", Title: "Log in", Error: "Invalid username or password."})
 			return
 		}
 	}
