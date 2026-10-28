@@ -144,7 +144,7 @@ Drafts return 404 publicly. Destructive GET endpoints are unavailable.
 - `/admin`: dashboard, editorial counts and publication status.
 - `/admin/posts`: search, status filters and creation/editing.
 - `/admin/posts/create`, `/admin/posts/{id}/edit`: Markdown editor and preview.
-- `/admin/guestbook`: dynamic entry management; emails are admin-only.
+- `/admin/guestbook`: dynamic entry management with complete email addresses.
 - `/admin/password`: change the signed-in account's password using its current
   password and confirmation of the new one; all its sessions are revoked.
 - `/guestbook`: public reading/signing; `/login` and POST `/logout` manage sessions.
@@ -165,9 +165,28 @@ navigation in two groups, and a reading column. Navigation works without
 JavaScript, marks the current section, and keeps Blog active on article pages.
 Services, GPG keys, donations and the guestbook remain directly accessible.
 Guestbook entries stack their fields on narrow screens, retaining the desktop
-table and admin-only data. Administration and login retain the classic theme.
+table and admin-only deletion controls. Administration and login retain the classic theme.
 CSS and script URLs include content hashes so an update takes effect without
 waiting for the previous browser cache to expire.
+
+Optional guestbook contacts are public in obfuscated form. The initial public
+HTML contains only a partial mask, with no complete addresses or mailto links.
+The first contact click asks for the dish of the day in a dark dialog. A correct
+answer to the CSRF-protected `/guestbook/unlock-emails` POST unlocks contacts for
+that server-side session, including other guestbook pages and tabs. New, expired
+or rotated sessions must answer again. Dish answers are limited to 10 per IP in
+15 minutes. Each subsequent click performs a session/CSRF-protected POST to
+`/guestbook/{id}/email`, limited to 20 requests per IP per 15 minutes and served
+with `Cache-Control: no-store`. The browser shows `[at]`/`[dot]` notation and
+creates an encoded mailto link after the click. Missing or invalid contacts
+are unavailable. Without JavaScript contacts remain masked; comments and the
+signing form still work. The form explicitly says that an optional email can
+be revealed publicly. Existing addresses are also available through this flow.
+This slows simple bulk scraping; automated clients can still find the public
+dish, obtain CSRF tokens and imitate clicks, so it is not confidentiality or a
+guarantee against scraping.
+The login whitelist does not bypass contact request limits. No schema migration
+or reimport is required.
 
 The dynamic guestbook footer records the HTML generation time (through rendering the page
 body, excluding database queries, disk writes and network delivery) and, on

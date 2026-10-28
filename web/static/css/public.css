@@ -154,6 +154,9 @@ body.public-site {
 .public-site .guestbook-table { font-size: 14px; }
 .public-site .guestbook-table, .public-site .guestbook-table th, .public-site .guestbook-table td { border-color: var(--public-line); }
 .public-site .guestbook-table time { color: #a4b1b5; }
+.public-site .guest-email-reveal, .public-site .guest-email a.guest-email-contact { display: inline-flex; align-items: center; max-width: 100%; min-height: 44px; padding: 0; border: 0; background: transparent; color: #b9d3d0; font: inherit; text-align: left; overflow-wrap: anywhere; text-decoration: underline dotted; text-underline-offset: 4px; cursor: pointer; }
+.public-site .guest-email-reveal:disabled { cursor: wait; opacity: .65; }
+.public-site .guest-email [role="status"] { display: block; color: #b9c6c8; margin-top: 4px; }
 .public-site .guest-dialog {
   color-scheme: dark;
   color: #e4e7e7;

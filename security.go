@@ -12,10 +12,28 @@ import (
 )
 
 type session struct {
-	User    string
-	CSRF    string
-	Expires time.Time
+	User           string
+	CSRF           string
+	Expires        time.Time
+	EmailsUnlocked bool
 }
+
+func (s *security) unlockEmails(r *http.Request) bool {
+	cookie, err := r.Cookie("delegao_session")
+	if err != nil {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	sess, ok := s.sessions[cookie.Value]
+	if !ok || !time.Now().Before(sess.Expires) {
+		return false
+	}
+	sess.EmailsUnlocked = true
+	s.sessions[cookie.Value] = sess
+	return true
+}
+
 type attempt struct {
 	Count   int
 	Expires time.Time

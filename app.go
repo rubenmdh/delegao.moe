@@ -73,6 +73,7 @@ func newApp(store *Store, secure bool, answer string) (*App, error) {
 		"postDate":  func(t time.Time) string { return t.Format("2 January 2006") },
 		"shortDate": func(t time.Time) string { return t.Format("2 Jan 2006") },
 		"excerpt":   func(s string) string { return postExcerpt(s, 400) },
+		"maskEmail": maskGuestEmail,
 	}
 	t, err := template.New("site").Funcs(funcs).ParseFS(web, "web/templates/*.html", "web/templates/pages/*.html")
 	if err != nil {
@@ -107,6 +108,8 @@ func (a *App) handler() http.Handler {
 	}
 	bind("GET", "guestbook", a.guestList)
 	bind("POST", "guestbook", a.addGuest)
+	bind("POST", "guestbook.email", a.guestEmail)
+	bind("POST", "guestbook.email-unlock", a.unlockGuestEmails)
 	bind("GET", "login", a.loginForm)
 	bind("POST", "login", a.login)
 	bind("POST", "logout", a.logout)

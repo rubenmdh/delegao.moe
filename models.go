@@ -57,8 +57,10 @@ func slug(s string) string {
 var routes = map[string]string{
 	"home": "/", "posts.index": "/posts", "posts.show": "/posts/{id}/{slug}",
 	"login": "/login", "logout": "/logout", "guestbook": "/guestbook",
-	"services": "/services",
-	"admin":    "/admin", "admin.posts": "/admin/posts", "admin.posts.create": "/admin/posts/create",
+	"guestbook.email":        "/guestbook/{id}/email",
+	"guestbook.email-unlock": "/guestbook/unlock-emails",
+	"services":               "/services",
+	"admin":                  "/admin", "admin.posts": "/admin/posts", "admin.posts.create": "/admin/posts/create",
 	"admin.posts.edit": "/admin/posts/{id}/edit", "admin.posts.update": "/admin/posts/{id}",
 	"admin.posts.delete": "/admin/posts/{id}/delete", "admin.guests": "/admin/guestbook",
 	"admin.guests.delete": "/admin/guestbook/{id}/delete",

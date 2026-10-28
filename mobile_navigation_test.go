@@ -74,7 +74,10 @@ func TestGuestbookResponsiveMarkupAndPrivateFields(t *testing.T) {
 			t.Fatal("guestbook lost data or accessible field headings")
 		}
 		if strings.Contains(html, guest.Email) != admin || strings.Contains(html, `/admin/guestbook/13/delete`) != admin {
-			t.Fatal("private email or deletion controls leaked or disappeared")
+			t.Fatal("unmasked email or deletion controls leaked or disappeared")
+		}
+		if !admin && !strings.Contains(html, `data-email-url="/guestbook/13/email"`) {
+			t.Fatal("masked public contact is missing")
 		}
 		if !strings.Contains(html, `aria-label="Pagination"`) || !strings.Contains(html, `href="?page=2"`) {
 			t.Fatal("guestbook pagination disappeared")
