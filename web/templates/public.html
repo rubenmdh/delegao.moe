@@ -19,7 +19,7 @@
 {{define "public-footer"}}<footer class="public-footer">
 <div><a href="{{route "guestbook"}}" {{if eq .Page "guestbook"}}aria-current="page"{{end}}><i class="far fa-address-book" aria-hidden="true"></i>guestbook</a><span class="utility-divider" aria-hidden="true">·</span><a href="/keys" {{if eq .Page "keys"}}aria-current="page"{{end}}><i class="fas fa-key" aria-hidden="true"></i>gpg</a><span class="utility-divider" aria-hidden="true">·</span><a href="/donate" {{if eq .Page "donate"}}aria-current="page"{{end}}><i class="far fa-heart" aria-hidden="true"></i>donate</a></div>
 <div class="footer-details">
-{{with .Rendering}}<small class="generation-note"><a href="https://go.dev/blog/greenteagc" title="Time to render this page's HTML, excluding database queries and disk writes.">{{.GoVersion}} in {{.Elapsed}}</a>{{if .Load}}<span aria-hidden="true"> · </span><span title="One-minute system load average when this HTML was generated; not CPU utilization.">load {{.Load}}</span>{{end}}</small>{{end}}
+{{with .Rendering}}<small class="generation-note"><a href="https://go.dev/blog/greenteagc" title="Time to render this page's HTML, excluding database queries and disk writes.">{{.GoVersion}} ({{.Architecture}}) in {{.Elapsed}}</a>{{if .Load}}<span aria-hidden="true"> · </span><span title="One-minute system load average when this HTML was generated; not CPU utilization.">load {{.Load}}</span>{{end}}</small>{{end}}
 <a class="ipv6-indicator" href="https://ipv6.sx/" data-ipv6-indicator title="Check your IPv6 connection at ipv6.sx"><span class="connection-dot" aria-hidden="true"></span><span data-ipv6-label>IPv6 · test your connection</span></a>
 </div>
 </footer>{{end}}

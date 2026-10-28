@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -13,9 +14,10 @@ import (
 // PageRendering is sampled for the dynamic public guestbook only.
 // Load is the system's one-minute load average, not a CPU percentage.
 type PageRendering struct {
-	started   time.Time
-	Load      string
-	GoVersion string
+	started      time.Time
+	Load         string
+	GoVersion    string
+	Architecture string
 }
 
 // Elapsed is evaluated by the footer after the page body has been rendered.
@@ -40,13 +42,28 @@ func formatRenderDuration(elapsed time.Duration) string {
 func (a *App) renderPage(v View) ([]byte, error) {
 	v.Rendering = nil
 	if !v.Admin && v.Page == "guestbook" {
-		v.Rendering = &PageRendering{started: time.Now(), Load: systemLoad(), GoVersion: runtime.Version()}
+		v.Rendering = &PageRendering{started: time.Now(), Load: systemLoad(), GoVersion: runtime.Version(), Architecture: runtimeArchitecture()}
 	}
 	var html bytes.Buffer
 	if err := a.templates.ExecuteTemplate(&html, "layout", v); err != nil {
 		return nil, err
 	}
 	return html.Bytes(), nil
+}
+
+func runtimeArchitecture() string {
+	arch := runtime.GOARCH
+	if arch == "arm" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			for _, setting := range info.Settings {
+				if setting.Key == "GOARM" {
+					arch += "v" + strings.Split(setting.Value, ",")[0]
+					break
+				}
+			}
+		}
+	}
+	return runtime.GOOS + "/" + arch
 }
 
 func formatSystemLoad(source string) string {

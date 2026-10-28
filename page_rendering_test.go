@@ -42,7 +42,7 @@ func TestRenderingFooterScope(t *testing.T) {
 		if got := strings.Contains(string(body), `class="generation-note"`); got != tc.want {
 			t.Errorf("page %s admin=%v: rendering footer = %v, want %v", tc.view.Page, tc.view.Admin, got, tc.want)
 		}
-		if tc.want && !strings.Contains(string(body), runtime.Version()+" in ") {
+		if tc.want && !strings.Contains(string(body), runtime.Version()+" ("+runtimeArchitecture()+") in ") {
 			t.Fatal("guestbook does not show the actual Go runtime version")
 		}
 		public := !tc.view.Admin && tc.view.Page != "login"
