@@ -150,6 +150,16 @@ Drafts return 404 publicly. Destructive GET endpoints are unavailable.
 - `/guestbook`: public reading/signing; `/login` and POST `/logout` manage sessions.
 - `/services`: generated directory using the shared list in `public_services.go`.
 
+The home service links and directory include Mumbweb (a Mumble web client), vid
+(Piped), safe, paste and the IP checker. Favicons are bundled locally with hashed
+URLs, avoiding external icon requests. Original icon sources are
+`https://paste.delegao.moe/img/favicon-32x32.png`,
+`https://ipv6.sx/assets/brand/favicon/favicon-32x32.png`,
+`https://vid.delegao.moe/favicon.ico` and
+`https://mumbweb.maduixa.re/voice-logo.ico`. Safe currently uses a local file/upload
+fallback because its HTTPS endpoint rejects the TLS server name; replace that
+asset when its favicon is available again.
+
 Public pages follow the approved blog-first layout: a small identity, direct
 navigation in two groups, and a reading column. Navigation works without
 JavaScript, marks the current section, and keeps Blog active on article pages.

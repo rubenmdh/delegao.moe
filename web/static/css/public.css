@@ -129,6 +129,8 @@ body.public-site {
 .public-site .services-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; margin: 26px 0 0; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); font-size: 12px; }
 .public-site .services-line > span:first-child { color: #8d9da0; margin-right: 6px; }
 .public-site .services-line a { display: inline-flex; align-items: center; min-height: 34px; color: #bdcdce; }
+.public-site .service-link { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; }
+.public-site .service-icon { width: 16px; height: 16px; object-fit: contain; flex: 0 0 auto; }
 .public-site .services-line .service-separator { color: #596c71; }
 .public-site .services-line .all-services { margin-left: auto; color: #8eaaad; }
 .public-site .services-line .services-heading { color: #8d9da0; margin-right: 6px; }
