@@ -217,6 +217,14 @@ come from the validated `TRUSTED_PROXIES` chain; nginx must overwrite forwarded
 headers rather than trusting values supplied by the visitor. Unknown users use
 a dummy bcrypt check and the same generic failure message as bad passwords.
 
+`LOGIN_RATE_LIMIT_WHITELIST` optionally exempts exact comma-separated IPv4/IPv6
+addresses from the login attempt limit. Password verification, CSRF and all
+other controls still apply. It grants no administrative access by itself. Public
+builds have no exemptions. A private build can set a default with
+`deploy/build.ps1 -LoginRateLimitWhitelist '198.51.100.10,2001:db8::10'`;
+keep deployment-specific build commands and binaries outside Git. An environment
+value overrides that compiled default; an explicit empty value disables it.
+
 Password changes require a session, CSRF, the current password and matching new
 passwords of at least 15 characters, within bcrypt's 72-byte UTF-8 limit. New
 hashes use bcrypt cost 12. Changes are limited to five attempts per IP and per

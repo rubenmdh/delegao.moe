@@ -84,6 +84,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	app.loginRateLimitWhitelist, err = configuredLoginRateLimitWhitelist()
+	if err != nil {
+		return err
+	}
 	workers, err := envInt("BUILD_WORKERS", 2, 1, 4)
 	if err != nil {
 		return err

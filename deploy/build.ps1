@@ -1,9 +1,13 @@
 param(
     [ValidateSet('armv7', 'arm64')]
     [string]$Target = 'armv7',
-    [string]$Go = 'go'
+    [string]$Go = 'go',
+    [string]$LoginRateLimitWhitelist = ''
 )
 $ErrorActionPreference = 'Stop'
+if ($LoginRateLimitWhitelist -and $LoginRateLimitWhitelist -notmatch '^[0-9A-Fa-f:.,]+$') {
+    throw 'LoginRateLimitWhitelist must contain only comma-separated IP addresses.'
+}
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $outputDirectory = Join-Path $projectRoot 'dist'
 New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
@@ -24,7 +28,11 @@ try {
     $output = Join-Path $outputDirectory "delegao-linux-$Target"
     Push-Location $projectRoot
     try {
-        & $Go build -trimpath '-ldflags=-s -w' -o $output .
+        $linkFlags = '-s -w'
+        if ($LoginRateLimitWhitelist) {
+            $linkFlags += " -X main.buildLoginRateLimitWhitelist=$LoginRateLimitWhitelist"
+        }
+        & $Go build -trimpath "-ldflags=$linkFlags" -o $output .
         if ($LASTEXITCODE -ne 0) { throw 'Go build failed.' }
     } finally { Pop-Location }
     Get-FileHash -LiteralPath $output -Algorithm SHA256

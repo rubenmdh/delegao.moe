@@ -30,15 +30,16 @@ var web embed.FS
 type App struct {
 	// Serialize the final credential check/session issue with password updates
 	// and revocation, so an in-flight login cannot revive an old password.
-	credentialsMu sync.Mutex
-	publisher     *Publisher
-	proxies       []netip.Prefix
-	store         *Store
-	security      *security
-	templates     *template.Template
-	markdown      goldmark.Markdown
-	answer        string
-	dummyHash     []byte
+	credentialsMu           sync.Mutex
+	loginRateLimitWhitelist map[netip.Addr]struct{}
+	publisher               *Publisher
+	proxies                 []netip.Prefix
+	store                   *Store
+	security                *security
+	templates               *template.Template
+	markdown                goldmark.Markdown
+	answer                  string
+	dummyHash               []byte
 }
 type View struct {
 	Rendering                              *PageRendering
@@ -350,7 +351,7 @@ func (a *App) loginForm(w http.ResponseWriter, r *http.Request) {
 	a.render(w, r, 200, View{Page: "login", Title: "Log in"})
 }
 func (a *App) login(w http.ResponseWriter, r *http.Request) {
-	if !a.security.allow(r, "login", 10) {
+	if !a.allowLogin(r) {
 		w.Header().Set("Retry-After", "900")
 		http.Error(w, "Too many login attempts. Please try again later.", 429)
 		return
