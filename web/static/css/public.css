@@ -2,6 +2,9 @@
 body.public-site {
   --public-inset: clamp(35px, 11vw, 185px);
   --public-line: rgba(255, 255, 255, .13);
+  --public-panel: #1b2225;
+  --public-control: #12191c;
+  --public-focus: #c2dad7;
   color-scheme: dark;
   margin: 0;
   overflow-x: visible;
@@ -149,9 +152,28 @@ body.public-site {
 .public-site .guestbook-table { font-size: 14px; }
 .public-site .guestbook-table, .public-site .guestbook-table th, .public-site .guestbook-table td { border-color: var(--public-line); }
 .public-site .guestbook-table time { color: #a4b1b5; }
-.public-site .guest-dialog { color-scheme: light; color: #212529; }
-.public-site .guest-dialog a:not(.btn) { color: #007bff; }
-.public-site .guest-dialog a:not(.btn):hover { color: #0056b3; }
+.public-site .guest-dialog {
+  color-scheme: dark;
+  color: #e4e7e7;
+  background: var(--public-panel);
+  border: 1px solid var(--public-line);
+  box-shadow: 0 15px 45px rgba(0,0,0,.35);
+  overscroll-behavior: contain;
+}
+.public-site .guest-dialog::backdrop { background: rgba(8,12,14,.75); }
+.public-site .guest-dialog .modal-content { color: inherit; background: var(--public-panel); border: 0; }
+.public-site .guest-dialog .modal-header, .public-site .guest-dialog .modal-footer { border-color: var(--public-line); }
+.public-site .guest-dialog .alert-secondary { color: #b9c6c8; background: transparent; border-color: var(--public-line); }
+.public-site .guest-dialog label { color: #c4ccce; }
+.public-site .guest-dialog .form-control { color: #e4e7e7; background: var(--public-control); border-color: var(--public-line); caret-color: #e4e7e7; }
+.public-site .guest-dialog .form-control:focus { border-color: var(--public-focus); outline: 1px solid var(--public-focus); outline-offset: 1px; box-shadow: none; }
+.public-site .guest-dialog .close { color: inherit; text-shadow: none; opacity: .7; }
+.public-site .guest-dialog .close:hover { opacity: 1; }
+.public-site .guest-dialog small { color: #9cabad; }
+.public-site .guest-dialog a:not(.btn) { color: #b9d3d0; text-decoration: underline; }
+.public-site .guest-dialog a:not(.btn):hover { color: #fff; }
+.public-site .guest-dialog .btn-secondary { color: #c4ccce; background: transparent; border-color: #718086; }
+.public-site .guest-dialog .btn-secondary:hover { color: #fff; background: rgba(255,255,255,.06); }
 .public-site .guest-dialog .modal-title { margin: 0; font-size: 20px; letter-spacing: normal; }
 .public-site .guest-dialog .modal-content p { max-width: none; }
 .public-site .sr-only-focusable:focus { position: fixed; top: 10px; left: 15px; z-index: 20; width: auto; height: auto; padding: 8px 13px; background: #131b1e; color: #fff; }

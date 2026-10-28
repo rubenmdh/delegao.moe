@@ -1,6 +1,9 @@
 /* A one-off accent layer; dormant without the time-gated root class. */
 html.season-halloween body.public-site {
   --public-line: rgba(218, 156, 99, .22);
+  --public-panel: #211b24;
+  --public-control: #18131a;
+  --public-focus: #d5aa7d;
   background-color: #1a151b;
 }
 html.season-halloween .public-site::before {
